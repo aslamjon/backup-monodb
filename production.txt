@@ -1,0 +1,74 @@
+
+
+# LOCAL: get ssh key from .ssh/id_rsa.pub
+# AWS: then past to bottom of .ssh/authorized_keys
+
+# LOCAL: create ecosystem.config.js in root directory
+
+### 
+  module.exports = {
+    apps: [
+      {
+        name: "preview",
+        script: "server.js",
+        env_production: {
+          NODE_ENV: "production",
+        },
+      },
+    ],
+
+    // Deployment Configuration
+    deploy: {
+      production: {
+        user: "ubuntu",
+        host: "18.222.127.242",
+        ref: "origin/main",
+        // repo: "git@github.com:aslamjon/preview.git",
+        repo: "https://github.com/aslamjon/preview.git",
+        path: "/home/ubuntu/deploy",
+        "pre-setup": "pwd",
+        "pre-deploy-local": "echo 'This is a local deployment'",
+        "post-deploy": "npm install && pm2 startOrRestart ecosystem.config.js --env production",
+      },
+    },
+  };
+###
+
+// code larni serverga deploy qiladi
+# LOCAL: pm2 deploy production setup
+
+# AWS: show /home/ubuntu/deploy
+
+# LOCAL: run command -> pm2 deploy production exce "npm install && pm2 startOrRestart ecosystem.config.js --env production"
+
+# AWS: create .env in /home/ubuntu/deploy/source
+
+# AWS: install nginx
+
+# AWS: change file /etc/nginx/sites-available/default
+
+###
+
+location /api/goldstar {
+proxy_redirect off;
+proxy_http_version 1.1;
+proxy_pass http://localhost:8080; #whatever port your app runs on
+}
+
+
+proxy_redirect off;
+proxy_http_version 1.1;
+proxy_pass http://localhost:3000; #whatever port your app runs on
+proxy_set_header Host $host;
+proxy_set_header X-Real-IP $remote_addr;
+proxy_set_header X-Forwarded-for $proxy_add_x_forwarded_for;
+proxy_set_header X-Forwarded-Proto $scheme;
+proxy_set_header Upgrade $http_upgrade;
+proxy_set_header Connection 'upgrade';
+proxy_cache_bypass $http_upgrade;
+###
+
+# AWS: test is -> sudo nginx -t
+# AWS: restart nginx -> sudo service nginx restart
+
+# LOCAL: when change some code git push it and -> pm2 update then -> pm2 deploy production exce "npm install && pm2 startOrRestart ecosystem.config.js --env production"

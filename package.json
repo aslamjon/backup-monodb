@@ -1,0 +1,33 @@
+{
+  "name": "backup-monodb",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon ./src/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aslamjon/backup-monodb.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/aslamjon/backup-monodb/issues"
+  },
+  "homepage": "https://github.com/aslamjon/backup-monodb#readme",
+  "dependencies": {
+    "compression": "^1.7.4",
+    "cors": "^2.8.5",
+    "dotenv": "^16.2.0",
+    "express": "^4.18.2",
+    "express-rate-limit": "^6.7.0",
+    "lodash": "^4.17.21",
+    "mongodb": "^5.6.0",
+    "node-cron": "^3.0.2",
+    "node-telegram-bot-api": "^0.61.0",
+    "winston": "^3.9.0"
+  }
+}

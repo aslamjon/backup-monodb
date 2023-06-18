@@ -1,0 +1,14 @@
+node_modules
+# .env
+.env.development
+.env.test
+.env.production
+.env.prod
+.env.dev
+.vscode
+.DS_Store
+app.log
+pm2
+.vercel
+data
+package-lock.json
