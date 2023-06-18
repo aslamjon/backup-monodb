@@ -45,6 +45,7 @@ const backupDatabase = async ({ name, group_chat_id }) => {
       if (code) console.log("Process exit with code:", code);
       else if (signal) console.log("Process killed with signal:", signal);
       else {
+        console.log("success");
         bot.sendDocument(group_chat_id, filePath).then((r) => {
           unlink(filePath);
         });
