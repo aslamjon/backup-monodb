@@ -90,7 +90,7 @@ const PORT = config.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on ${PORT}`);
   startTelegramBot();
-  // init();
-  // cron.schedule(`0 0 * * *`, init);
+  init();
+  cron.schedule(`0 0 * * *`, init);
   // cron.schedule(`* * * * *`, init);
 });
