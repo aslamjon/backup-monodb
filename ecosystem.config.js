@@ -1,7 +1,7 @@
 module.exports = {
   apps: [
     {
-      name: "metalmart",
+      name: "backup",
       script: "src/index.js",
       env_production: {
         NODE_ENV: "production",
@@ -15,8 +15,8 @@ module.exports = {
       user: "root",
       host: "94.250.202.249",
       ref: "origin/main",
-      repo: "git@github.com:aslamjon/metalmart-backend.git",
-      path: "/root/metalmart",
+      repo: "git@github.com:aslamjon/backup-monodb.git",
+      path: "/root/backup",
       "pre-setup": "pwd",
       "pre-deploy-local": "echo 'This is a local deployment'",
       // "post-deploy": "cp ../.env ./ && npm install && pm2 startOrRestart ecosystem.config.js --env production",
