@@ -55,8 +55,9 @@ app.use(express.json({ extended: true })); // if json come backend then it conve
 
 app.use("/", express.static(path.join(__dirname, "./public")));
 
-app.get("/api/rebackup", () => {
+app.get("/api/rebackup", (req, res) => {
   init();
+  res.send("success ✅");
 });
 
 app.use(express.static("routes"));

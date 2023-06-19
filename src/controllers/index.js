@@ -1,13 +1,17 @@
 const { MongoClient } = require("mongodb");
 const fs = require("fs");
 const path = require("path");
-const config = require("../config");
 const { isEmpty, get } = require("lodash");
 const { spawn } = require("child_process");
+const archiver = require("archiver");
+const config = require("../config");
+
 const { bot } = require("../integration/telegram");
-const { unlink } = require("../utils/utiles");
+const { unlink, isProduction } = require("../utils/utiles");
 
 const url = config.MONGODB_URL;
+
+const nodeEnv = process.env.NODE_ENV || "development";
 
 const client = new MongoClient(url, {
   useNewUrlParser: true,
@@ -25,8 +29,10 @@ const readConfig = () => {
   return configJSON;
 };
 
-const backupDatabase = async ({ name, group_chat_id }) => {
+const backupDatabase = async ({ name, group_chat_id, folder_path, folder_path_dev }) => {
   try {
+    if (!isProduction()) folder_path = folder_path_dev;
+
     await client.connect();
 
     const adminDb = client.db("admin");
@@ -35,7 +41,7 @@ const backupDatabase = async ({ name, group_chat_id }) => {
 
     if (isEmpty(dbFound)) return;
 
-    const filePath = `${config.CACHE_PATH}/${name}_backup.gzip`;
+    const filePath = `${config.CACHE_PATH}/${name}_${nodeEnv}_backup.gzip`;
 
     const child = spawn(`mongodump`, [
       `--db=${name}`,
@@ -63,9 +69,47 @@ const backupDatabase = async ({ name, group_chat_id }) => {
       else if (signal) console.log("Process killed with signal:", signal);
       else {
         console.log("success ✅");
-        bot.sendDocument(group_chat_id, filePath).then((r) => {
-          unlink(filePath);
+        const folderPath = folder_path;
+        const outputFilePath = `${config.CACHE_PATH}/${name}_${nodeEnv}_backup_folder.zip`;
+
+        const output = fs.createWriteStream(outputFilePath);
+        const archive = archiver("zip", {
+          zlib: { level: 9 },
         });
+        output.on("close", () => {
+          bot
+            .sendDocument(group_chat_id, filePath)
+            .then(() => {
+              unlink(filePath);
+            })
+            .catch((error) => {
+              console.error("Error sending gzip files:", error);
+            });
+          bot
+            .sendDocument(group_chat_id, outputFilePath)
+            .then(() => {
+              unlink(outputFilePath);
+            })
+            .catch((error) => {
+              console.error("Error sending zip files:", error);
+            });
+
+          // bot.sendDocument(group_chat_id, filePath).then((r) => {
+          //   unlink(filePath);
+          // });
+        });
+
+        archive.on("error", (err) => {
+          throw err;
+        });
+
+        archive.pipe(output);
+
+        // Append the folder to the archive
+        archive.directory(folderPath, false); // The second parameter 'false' ensures that the folder structure is not included
+
+        // Finalize the archive
+        archive.finalize();
       }
     });
   } catch (error) {
@@ -87,7 +131,7 @@ const restoreDatabase = async (name) => {
 
 const init = () => {
   const configJSON = readConfig();
-  get(configJSON, "nameOfDbs", []).forEach(backupDatabase);
+  get(configJSON, "dbs", []).forEach(backupDatabase);
 };
 
 module.exports = { init };

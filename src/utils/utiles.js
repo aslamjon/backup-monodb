@@ -173,6 +173,12 @@ const isNum = (num) => {
 
 const isFile = (path) => fs.existsSync(path) && fs.lstatSync(path).isFile();
 
+const isProduction = () => {
+  const env = process.env.NODE_ENV || "development";
+  const isProduction = env === "production";
+  return isProduction;
+};
+
 // ********************************************************
 module.exports = {
   writeData,
@@ -193,4 +199,5 @@ module.exports = {
   isNum,
   createDefaultFolder,
   isFile,
+  isProduction,
 };
