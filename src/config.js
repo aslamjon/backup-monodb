@@ -20,10 +20,24 @@ const getMongoDbUrl = () => {
   return "unknown_env";
 };
 
+const getMongoDBUser = () => {
+  if (isProduction()) return process.env.MONGO_USER_PRODUCTION ? process.env.MONGO_USER_PRODUCTION : "production_env_not_found";
+  else return process.env.MONGO_USER_DEVELOPMENT ? process.env.MONGO_USER_DEVELOPMENT : "development_env_not_found";
+  return "unknown_env";
+};
+
+const getMongoDBPassword = () => {
+  if (isProduction()) return process.env.MONGO_PASSWORD_PRODUCTION ? process.env.MONGO_PASSWORD_PRODUCTION : "production_env_not_found";
+  else return process.env.MONGO_PASSWORD_DEVELOPMENT ? process.env.MONGO_PASSWORD_DEVELOPMENT : "development_env_not_found";
+  return "unknown_env";
+};
+
 const config = {
   APP_NAME: "BACKUP",
   API_ROOT: getEnvironments(),
   MONGODB_URL: getMongoDbUrl(),
+  MONGO_USER: getMongoDBUser(),
+  MONGO_PASSWORD: getMongoDBPassword(),
   DEFAULT_LANG_CODE: "uz",
   PROJECT_ID: 1,
   PORT: process.env.PORT,

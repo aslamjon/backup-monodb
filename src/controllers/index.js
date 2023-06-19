@@ -9,7 +9,14 @@ const { unlink } = require("../utils/utiles");
 
 const url = config.MONGODB_URL;
 
-const client = new MongoClient(url, { useNewUrlParser: true, useUnifiedTopology: true });
+const client = new MongoClient(url, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  auth: {
+    username: config.MONGO_USER,
+    password: config.MONGO_PASSWORD,
+  },
+});
 
 const readConfig = () => {
   let configJSON = fs.readFileSync(path.join(__dirname, "../../config.json"), { encoding: "ascii" });
@@ -30,7 +37,17 @@ const backupDatabase = async ({ name, group_chat_id }) => {
 
     const filePath = `${config.CACHE_PATH}/${name}_backup.gzip`;
 
-    const child = spawn(`mongodump`, [`--db=${name}`, `--archive=${filePath}`, `--gzip`]);
+    const child = spawn(`mongodump`, [
+      `--db=${name}`,
+      `--archive=${filePath}`,
+      `--gzip`,
+      `--authenticationDatabase`,
+      `admin`,
+      `--username`,
+      config.MONGO_USER,
+      `--password`,
+      config.MONGO_PASSWORD,
+    ]);
 
     child.stdout.on("data", (data) => {
       console.log("stdout", data);
@@ -45,7 +62,7 @@ const backupDatabase = async ({ name, group_chat_id }) => {
       if (code) console.log("Process exit with code:", code);
       else if (signal) console.log("Process killed with signal:", signal);
       else {
-        console.log("success");
+        console.log("success ✅");
         bot.sendDocument(group_chat_id, filePath).then((r) => {
           unlink(filePath);
         });
