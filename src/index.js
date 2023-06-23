@@ -13,6 +13,7 @@ const config = require("./config");
 const { init: startTelegramBot } = require("./integration/telegram/index");
 const { createDefaultFolder, errorHandlerBot } = require("./utils/utiles");
 const { init } = require("./controllers");
+const router = require("./router");
 
 const app = express();
 
@@ -55,10 +56,7 @@ app.use(express.json({ extended: true })); // if json come backend then it conve
 
 app.use("/", express.static(path.join(__dirname, "./public")));
 
-app.get("/api/rebackup", (req, res) => {
-  init();
-  res.send("success ✅");
-});
+app.use("/api", router);
 
 app.use(express.static("routes"));
 
@@ -95,7 +93,7 @@ const PORT = config.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on ${PORT}`);
   startTelegramBot();
-  init();
+  // init();
   cron.schedule(`0 0 * * *`, init);
   // cron.schedule(`* * * * *`, init);
 });

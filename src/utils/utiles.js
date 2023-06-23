@@ -13,7 +13,10 @@ const createDefaultFolder = (dirName) => !fs.existsSync(dirName) && fs.mkdirSync
 function rename(previousName, newName) {
   return new Promise((resolve, reject) => {
     fs.rename(previousName, newName, (err) => {
-      if (err) resolve(0);
+      if (err) {
+        console.log("rename", err);
+        resolve(0);
+      }
       resolve(1);
     });
   });
@@ -21,7 +24,10 @@ function rename(previousName, newName) {
 function unlink(tempPath) {
   return new Promise((resolve, reject) => {
     fs.unlink(tempPath, (err) => {
-      if (err) resolve(0);
+      if (err) {
+        console.log("unlink", err);
+        resolve(0);
+      }
       resolve(1);
     });
   });
@@ -179,6 +185,15 @@ const isProduction = () => {
   return isProduction;
 };
 
+function isFolder(path) {
+  try {
+    const stats = fs.statSync(path);
+    return stats.isDirectory();
+  } catch (error) {
+    return false; // Return false if there's an error or the path is not a directory
+  }
+}
+
 // ********************************************************
 module.exports = {
   writeData,
@@ -200,4 +215,5 @@ module.exports = {
   createDefaultFolder,
   isFile,
   isProduction,
+  isFolder,
 };
