@@ -74,8 +74,8 @@ const messageController = async (msg) => {
   else if (text === "/info") return infoCommand(bot, msg);
 
   // console.log(msg);
-  if (!msg.contact && !msg.location && msg.document && !get(msg, "text", "").startsWith("/"))
-    return bot.sendMessage(chatId, "Men bu narsani bilmayman");
+  // if (!msg.contact && !msg.location && msg.document && !get(msg, "text", "").startsWith("/"))
+  //   return bot.sendMessage(chatId, "Men bu narsani bilmayman");
 };
 
 const errorController = async (error) => {
