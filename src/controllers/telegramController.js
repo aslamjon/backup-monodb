@@ -1,5 +1,8 @@
-const { TelegramClient, Api } = require("telegram");
+const { TelegramClient } = require("telegram");
 const { StringSession } = require("telegram/sessions");
+const { get } = require("lodash");
+const fs = require("fs");
+
 const config = require("../config");
 
 const apiId = config.TELEGRAM_USER_API_ID * 1;
@@ -26,17 +29,35 @@ const sendFileToChat = async (chatIdOrUserName, filePath, caption) => {
   try {
     await client.connect();
     if (await client.checkAuthorization()) {
+      const messageResult = await client.sendMessage(chatIdOrUserName, { message: "0% of 100%" });
+
+      const fileSize = fs.statSync(filePath);
+      const fileSizeInBytes = fileSize.size;
+      const fileSizeInKilobytes = fileSizeInBytes / 1024;
+      const fileSizeInMegabytes = fileSizeInKilobytes / 1024;
+
       const result = await client.sendFile(chatIdOrUserName, {
         file: filePath,
         caption,
-        ...(config.isProduction
-          ? {}
-          : {
-              progressCallback: (process) => {
-                console.log(`${(process * 100).toFixed(3)}% of 100%`);
-              },
-            }),
+        progressCallback: (process) => {
+          !config.isProduction && console.log(`${(process * 100).toFixed(3)}% of 100%`);
+
+          if ((process * 100).toFixed(0) % 2 === 0) {
+            const uploaded = (fileSizeInBytes * (process * 100)) / 100;
+            const uploadedKilobytes = uploaded / 1024;
+            const uploadedMegabytes = uploadedKilobytes / 1024;
+            client.editMessage(chatIdOrUserName, {
+              message: get(messageResult, "id"),
+              text: `${(process * 100).toFixed(3)}% of 100%.\n\nUploaded ${uploadedKilobytes.toFixed(1)} of ${fileSizeInKilobytes.toFixed(
+                1
+              )} KB\nUploaded ${uploadedMegabytes.toFixed(1)} of ${fileSizeInMegabytes.toFixed(1)} MB`,
+            });
+          }
+        },
       });
+
+      setTimeout(() => client.deleteMessages(chatIdOrUserName, [get(messageResult, "id")], { revoke: true }), 10000);
+
       // console.log("Message details:", result);
     } else {
       console.log("I am connected to telegram servers but not logged in with any account/bot");
@@ -44,7 +65,8 @@ const sendFileToChat = async (chatIdOrUserName, filePath, caption) => {
   } catch (err) {
     console.error("Failed to send file:", err);
   } finally {
-    await client.disconnect();
+    // await client.disconnect();
+    setTimeout(() => client.disconnect(), 11000);
   }
 };
 
