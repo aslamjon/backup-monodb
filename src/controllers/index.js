@@ -12,15 +12,6 @@ const { backupDatabase } = require("./backupController");
 
 const url = config.MONGODB_URL;
 
-const client = new MongoClient(url, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  auth: {
-    username: config.MONGO_USER,
-    password: config.MONGO_PASSWORD,
-  },
-});
-
 const readConfig = () => {
   let configJSON = fs.readFileSync(path.join(__dirname, "../../config.json"), { encoding: "ascii" });
   if (isEmpty(configJSON)) return {};
@@ -64,7 +55,7 @@ const afterUnzipCbHandler = async ({ name, outputFolderPath, fail = () => {}, su
 // mongorestore --db=metalmart --archive=metalmart_production_backup.gzip --gzip --authenticationDatabase admin --username aslamjon --password TpYvzK2jAQy3TXR5576tVWWNJpSGNrKBkFF
 const restoreDatabase = async (req, res) => {
   try {
-    const { name, username, password } = req.body;
+    const { name, username, password, db_username, db_password } = req.body;
     if (username !== "aslamjon" || password !== "25102000Aslamjon") return res.status(400).send({ error: "username or password is invalid" });
 
     const temp = {};
@@ -74,6 +65,15 @@ const restoreDatabase = async (req, res) => {
 
     if (!get(temp, "dbBackupFile")) return res.status(400).send({ error: "dbBackupFile should not be empty" });
     if (!get(temp, "folderBackupFile")) return res.status(400).send({ error: "folderBackupFile should not be empty" });
+
+    const client = new MongoClient(url, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      auth: {
+        username: db_username,
+        password: db_password,
+      },
+    });
 
     await client.connect();
 
@@ -89,9 +89,9 @@ const restoreDatabase = async (req, res) => {
       `--authenticationDatabase`,
       `admin`,
       `--username`,
-      config.MONGO_USER,
+      db_username,
       `--password`,
-      config.MONGO_PASSWORD,
+      db_password,
     ]);
 
     child.stdout.on("data", (data) => {
@@ -143,7 +143,17 @@ const init = async () => {
   // const moneyGroupUsername = "moneybotb";
   // const backupGroupId = "-1001891769962";
 
-  const callback = (item) => backupDatabase({ ...item, client });
+  const callback = (item) => {
+    const client = new MongoClient(url, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      auth: {
+        username: item.db_username,
+        password: item.db_password,
+      },
+    });
+    backupDatabase({ ...item, client });
+  };
   get(configJSON, "dbs", []).forEach(callback);
 };
 

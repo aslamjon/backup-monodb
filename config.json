@@ -6,7 +6,9 @@
       "folder_path": "/root/metalmart/source/data",
       "folder_path_dev": "/Users/aslamjonibragimov/GitHub/metalmart-backend/data",
       "log_file_path": "/root/metalmart/source/app.log",
-      "log_file_path_dev": "/Users/aslamjonibragimov/GitHub/metalmart-backend/app.log"
+      "log_file_path_dev": "/Users/aslamjonibragimov/GitHub/metalmart-backend/app.log",
+      "db_username": "aslamjon",
+      "db_password": "TpYvzK2jAQy3TXR5576tVWWNJpSGNrKBkFF"
     },
     {
       "name": "flash-card",
@@ -14,7 +16,9 @@
       "folder_path": "/root/flash-card/source/data",
       "folder_path_dev": "/Users/aslamjonibragimov/GitHub/flash-card-backend/data",
       "log_file_path": "/root/flash-card/source/app.log",
-      "log_file_path_dev": "/Users/aslamjonibragimov/GitHub/flash-card-backend/app.log"
+      "log_file_path_dev": "/Users/aslamjonibragimov/GitHub/flash-card-backend/app.log",
+      "db_username": "flash-card",
+      "db_password": "8Sqcks9qDsd95n6Mt8y3EJwfR06QTh226KuBik8WKrxa02Oi8q"
     }
   ]
 }
