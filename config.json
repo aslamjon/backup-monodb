@@ -4,7 +4,17 @@
       "name": "metalmart",
       "group_chat_id": "-1001891769962",
       "folder_path": "/root/metalmart/source/data",
-      "folder_path_dev": "/Users/aslamjonibragimov/GitHub/metalmart-backend/data"
+      "folder_path_dev": "/Users/aslamjonibragimov/GitHub/metalmart-backend/data",
+      "log_file_path": "/root/metalmart/source/app.log",
+      "log_file_path_dev": "/Users/aslamjonibragimov/GitHub/metalmart-backend/app.log"
+    },
+    {
+      "name": "flash-card",
+      "group_chat_id": "-1001891769962",
+      "folder_path": "/root/flash-card/source/data",
+      "folder_path_dev": "/Users/aslamjonibragimov/GitHub/flash-card-backend/data",
+      "log_file_path": "/root/flash-card/source/app.log",
+      "log_file_path_dev": "/Users/aslamjonibragimov/GitHub/flash-card-backend/app.log"
     }
   ]
 }

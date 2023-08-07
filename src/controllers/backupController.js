@@ -79,9 +79,12 @@ const sendFileWithTelegramBot = (chat_id, filePath, fileType) => {
     });
 };
 
-const backupDatabase = async ({ name, group_chat_id, folder_path, folder_path_dev, client }) => {
+const backupDatabase = async ({ name, group_chat_id, folder_path, folder_path_dev, log_file_path, log_file_path_dev, client }) => {
   try {
-    if (!isProduction()) folder_path = folder_path_dev;
+    if (!isProduction()) {
+      folder_path = folder_path_dev;
+      log_file_path = log_file_path_dev;
+    }
 
     await client.connect();
 
@@ -96,6 +99,7 @@ const backupDatabase = async ({ name, group_chat_id, folder_path, folder_path_de
     const dumpedDatabaseCallback = () => {
       // console.log("dumped successfully ✅");
       sendFileWithTelegramBot(group_chat_id, filePath, "gzip");
+      sendFileWithTelegramBot(group_chat_id, log_file_path, "log");
 
       archiveFolder({ name, folder_path }, (outputFilePath) => {
         // sendFileWithTelegramBot(group_chat_id, outputFilePath, "zip");
