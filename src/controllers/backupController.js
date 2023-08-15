@@ -3,14 +3,14 @@ const fs = require("fs");
 const { isEmpty } = require("lodash");
 const { spawn } = require("child_process");
 
-const { unlink, isProduction } = require("../utils/utiles");
+const { unlink, isProduction, copyFileAsync } = require("../utils/utiles");
 const config = require("../config");
 const { bot } = require("../integration/telegram");
 const { sendFileToChat } = require("./telegramController");
 
 const nodeEnv = process.env.NODE_ENV || "development";
 
-const dumpFromDatabase = ({ name, filePath }, cb = () => {}) => {
+const dumpFromDatabase = async ({ name, filePath }) => {
   const child = spawn(`mongodump`, [
     `--db=${name}`,
     `--archive=${filePath}`,
@@ -23,36 +23,25 @@ const dumpFromDatabase = ({ name, filePath }, cb = () => {}) => {
     config.MONGO_PASSWORD,
   ]);
 
-  child.stdout.on("data", (data) => {
-    console.log("stdout", data);
-  });
-  child.stderr.on("data", (data) => {
-    // show dumping process
-    // console.log("stderr", Buffer.from(data).toString());
-  });
-  child.on("error", (error) => {
-    console.log("error", error);
-  });
-  child.on("exit", (code, signal) => {
-    if (code) console.log("Process exit with code:", code);
-    else if (signal) console.log("Process killed with signal:", signal);
-    else cb();
+  return new Promise((resolve, reject) => {
+    child.stdout.on("data", (data) => {
+      console.log("stdout", data);
+    });
+    child.stderr.on("data", (data) => {
+      // show dumping process
+      // console.log("stderr", Buffer.from(data).toString());
+    });
+    child.on("error", reject);
+    child.on("exit", resolve);
   });
 };
 
-const archiveFolder = ({ name, folder_path }, cb = () => {}) => {
+const archiveFolder = async ({ name, folder_path }) => {
   const outputFilePath = `${config.CACHE_PATH}/${name}_${nodeEnv}_backup_folder.zip`;
 
   const output = fs.createWriteStream(outputFilePath);
   const archive = archiver("zip", {
     zlib: { level: 9 },
-  });
-  output.on("close", () => {
-    cb(outputFilePath);
-  });
-
-  archive.on("error", (err) => {
-    throw err;
   });
 
   archive.pipe(output);
@@ -62,24 +51,29 @@ const archiveFolder = ({ name, folder_path }, cb = () => {}) => {
 
   // Finalize the archive
   archive.finalize();
-};
-
-const sendFileWithTelegramBot = (chat_id, filePath, fileType) => {
-  bot
-    .sendDocument(chat_id, filePath)
-    .then(() => {
-      // unlink(filePath);
-    })
-    .catch((error) => {
-      bot.sendMessage(
-        chat_id,
-        `ERROR: ${error.message}.\nStatusCode: ${error.response.statusCode}. \nCould not send ${fileType} file.\npath: ${filePath}`
-      );
-      // console.error(`Error sending ${fileType} files:`, error);
+  return new Promise((resolve, reject) => {
+    output.on("close", () => {
+      resolve(outputFilePath);
     });
+
+    archive.on("error", reject);
+  });
 };
 
-const backupDatabase = async ({ name, group_chat_id, folder_path, folder_path_dev, log_file_path, log_file_path_dev, client }) => {
+const sendFileWithTelegramBot = async (chat_id, filePath, fileType) => {
+  try {
+    await bot.sendDocument(chat_id, filePath);
+    // unlink(filePath);
+  } catch (error) {
+    bot.sendMessage(
+      chat_id,
+      `ERROR: ${error.message}.\nStatusCode: ${error.response.statusCode}. \nCould not send ${fileType} file.\npath: ${filePath}`
+    );
+    // console.error(`Error sending ${fileType} files:`, error);
+  }
+};
+
+const backupDatabase = async ({ name, group_chat_id, folder_path, folder_path_dev, log_file_path, log_file_path_dev, client, next, index }) => {
   try {
     if (!isProduction()) {
       folder_path = folder_path_dev;
@@ -96,18 +90,19 @@ const backupDatabase = async ({ name, group_chat_id, folder_path, folder_path_de
 
     const filePath = `${config.CACHE_PATH}/${name}_${nodeEnv}_backup.gzip`;
 
-    const dumpedDatabaseCallback = () => {
-      // console.log("dumped successfully ✅");
-      sendFileWithTelegramBot(group_chat_id, filePath, "gzip");
-      sendFileWithTelegramBot(group_chat_id, log_file_path, "log");
+    await dumpFromDatabase({ name, filePath });
 
-      archiveFolder({ name, folder_path }, (outputFilePath) => {
-        // sendFileWithTelegramBot(group_chat_id, outputFilePath, "zip");
-        sendFileToChat(group_chat_id, outputFilePath);
-      });
-    };
+    await sendFileWithTelegramBot(group_chat_id, filePath, "gzip");
+    const destinationFilePathOfLog = `${config.CACHE_PATH}/${name}_${nodeEnv}_backup_logFile.log`;
 
-    dumpFromDatabase({ name, filePath }, dumpedDatabaseCallback);
+    await copyFileAsync(log_file_path, destinationFilePathOfLog);
+
+    await sendFileWithTelegramBot(group_chat_id, destinationFilePathOfLog, "log");
+
+    const outputFilePath = await archiveFolder({ name, folder_path });
+    // sendFileWithTelegramBot(group_chat_id, outputFilePath, "zip");
+    await sendFileToChat(group_chat_id, outputFilePath, name);
+    next(index + 1);
   } catch (error) {
     console.error("Error occurred during backup:", error);
   } finally {

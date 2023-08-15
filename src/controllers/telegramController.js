@@ -40,7 +40,7 @@ const sendFileToChat = async (chatIdOrUserName, filePath, caption) => {
         file: filePath,
         caption,
         progressCallback: (process) => {
-          !config.isProduction && console.log(`${(process * 100).toFixed(3)}% of 100%`);
+          !config.isProduction && console.log(`${(process * 100).toFixed(3)}% of 100% - ${caption}`);
 
           if ((process * 100).toFixed(0) % 2 === 0) {
             const uploaded = (fileSizeInBytes * (process * 100)) / 100;
@@ -48,9 +48,9 @@ const sendFileToChat = async (chatIdOrUserName, filePath, caption) => {
             const uploadedMegabytes = uploadedKilobytes / 1024;
             client.editMessage(chatIdOrUserName, {
               message: get(messageResult, "id"),
-              text: `${(process * 100).toFixed(3)}% of 100%.\n\nUploaded ${uploadedKilobytes.toFixed(1)} of ${fileSizeInKilobytes.toFixed(
+              text: `#${caption}\n${(process * 100).toFixed(3)}% of 100%.\n\nUploaded ${uploadedKilobytes.toFixed(
                 1
-              )} KB\nUploaded ${uploadedMegabytes.toFixed(1)} of ${fileSizeInMegabytes.toFixed(1)} MB`,
+              )} of ${fileSizeInKilobytes.toFixed(1)} KB\nUploaded ${uploadedMegabytes.toFixed(1)} of ${fileSizeInMegabytes.toFixed(1)} MB`,
             });
           }
         },

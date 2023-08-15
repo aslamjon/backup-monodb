@@ -143,7 +143,22 @@ const init = async () => {
   // const moneyGroupUsername = "moneybotb";
   // const backupGroupId = "-1001891769962";
 
-  const callback = (item) => {
+  // const callback = (item) => {
+  //   const client = new MongoClient(url, {
+  //     useNewUrlParser: true,
+  //     useUnifiedTopology: true,
+  //     auth: {
+  //       username: item.db_username,
+  //       password: item.db_password,
+  //     },
+  //   });
+  //   backupDatabase({ ...item, client });
+  // };
+  // get(configJSON, "dbs", []).forEach(callback);
+
+  const next = (index = 0) => {
+    if (get(configJSON, "dbs", []).length === index) return;
+    const item = get(configJSON, "dbs", [])[index];
     const client = new MongoClient(url, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
@@ -152,9 +167,9 @@ const init = async () => {
         password: item.db_password,
       },
     });
-    backupDatabase({ ...item, client });
+    backupDatabase({ ...item, client, next, index });
   };
-  get(configJSON, "dbs", []).forEach(callback);
+  next();
 };
 
 module.exports = { init, restoreDatabase };

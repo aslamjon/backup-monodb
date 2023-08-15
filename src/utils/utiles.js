@@ -194,6 +194,19 @@ function isFolder(path) {
   }
 }
 
+async function copyFileAsync(sourceFilePath, destinationFilePath) {
+  const sourceStream = fs.createReadStream(sourceFilePath);
+  const destinationStream = fs.createWriteStream(destinationFilePath);
+
+  return new Promise((resolve, reject) => {
+    sourceStream.on("error", reject);
+    destinationStream.on("error", reject);
+    destinationStream.on("finish", resolve);
+
+    sourceStream.pipe(destinationStream);
+  });
+}
+
 // ********************************************************
 module.exports = {
   writeData,
@@ -216,4 +229,5 @@ module.exports = {
   isFile,
   isProduction,
   isFolder,
+  copyFileAsync,
 };
