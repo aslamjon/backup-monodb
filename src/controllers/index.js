@@ -19,43 +19,59 @@ const readConfig = () => {
   return configJSON;
 };
 
-const unzipHander = ({ zipPath, outputFolderPath, cb = () => {}, fail = () => {} }) => {
+const unzipHander = async ({ zipPath, outputFolderPath }) => {
   // Create a read stream from the zip file
   const readStream = fs.createReadStream(zipPath);
 
-  // Pipe the read stream to the unzipper module
-  readStream
-    .pipe(unzipper.Extract({ path: outputFolderPath }))
-    .on("finish", () => {
-      // remove zipPath
-      unlink(zipPath);
-      cb();
-    })
-    .on("error", fail);
+  return new Promise((resolve, reject) => {
+    // Pipe the read stream to the unzipper module
+    readStream
+      .pipe(unzipper.Extract({ path: outputFolderPath }))
+      .on("finish", resolve)
+      .on("error", reject);
+  });
 };
 
-const afterUnzipCbHandler = async ({ name, outputFolderPath, fail = () => {}, success = () => {} }) => {
-  const configJSON = readConfig();
-  let { folder_path, folder_path_dev } = configJSON.dbs.find((item) => get(item, "name") === name);
+const restoreMongodb = async ({ name, path, username, password }) => {
+  try {
+    const child = spawn(`mongorestore`, [
+      `--db=${name}`,
+      `--archive=${path}`,
+      `--gzip`,
+      `--authenticationDatabase`,
+      `admin`,
+      `--username`,
+      username,
+      `--password`,
+      password,
+    ]);
 
-  if (!isProduction()) folder_path = folder_path_dev;
-
-  isFolder(folder_path) &&
-    fs.rmSync(folder_path, { recursive: true }, (error) => {
-      if (error) fail(`Error removing folder: ${error}}`);
+    child.stdout.on("data", (data) => {
+      console.log("stdout", data);
+    });
+    child.stderr.on("data", (data) => {
+      console.log("stderr", Buffer.from(data).toString());
     });
 
-  const result = await rename(outputFolderPath, folder_path);
+    return new Promise((resolve, reject) => {
+      child.on("error", reject);
 
-  if (result) return success("Completed successufully ✅");
-  return res.status(500).send("ERROR: it couldn't rename folder");
+      child.on("exit", async (code, signal) => {
+        if (code) reject(`Process exit with code: ${code}`);
+        else if (signal) reject(`Process killed with signal: ${signal}`);
+        else {
+          resolve();
+        }
+      });
+    });
+  } catch (e) {}
 };
-
 // mongorestore --db=metalmart --archive=./rbac.gzip --gzip
 // mongorestore --db=metalmart --archive=metalmart_production_backup.gzip --gzip --authenticationDatabase admin --username aslamjon --password TpYvzK2jAQy3TXR5576tVWWNJpSGNrKBkFF
 const restoreDatabase = async (req, res) => {
+  let client = {};
   try {
-    const { name, username, password, db_username, db_password } = req.body;
+    const { name, username, password } = req.body;
     if (username !== "aslamjon" || password !== "25102000Aslamjon") return res.status(400).send({ error: "username or password is invalid" });
 
     const temp = {};
@@ -66,7 +82,14 @@ const restoreDatabase = async (req, res) => {
     if (!get(temp, "dbBackupFile")) return res.status(400).send({ error: "dbBackupFile should not be empty" });
     if (!get(temp, "folderBackupFile")) return res.status(400).send({ error: "folderBackupFile should not be empty" });
 
-    const client = new MongoClient(url, {
+    const configJSON = readConfig();
+    const dbConfig = get(configJSON, "dbs", []).find((db) => db.name === name);
+    if (!dbConfig) return res.status(400).send({ error: "db not found" });
+
+    let { db_username, db_password, folder_path, folder_path_dev } = dbConfig;
+    if (!isProduction()) folder_path = folder_path_dev;
+
+    client = new MongoClient(url, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
       auth: {
@@ -82,55 +105,35 @@ const restoreDatabase = async (req, res) => {
 
     await db.dropDatabase();
 
-    const child = spawn(`mongorestore`, [
-      `--db=${name}`,
-      `--archive=${get(temp, "dbBackupFile.path")}`,
-      `--gzip`,
-      `--authenticationDatabase`,
-      `admin`,
-      `--username`,
-      db_username,
-      `--password`,
-      db_password,
-    ]);
+    await restoreMongodb({ name, path: get(temp, "dbBackupFile.path"), username: db_username, password: db_password });
 
-    child.stdout.on("data", (data) => {
-      console.log("stdout", data);
-    });
-    child.stderr.on("data", (data) => {
-      console.log("stderr", Buffer.from(data).toString());
-    });
-    child.on("error", (error) => {
-      res.status(500).send(`error: ${error}`);
-    });
-    child.on("exit", async (code, signal) => {
-      if (code) {
-        res.status(500).send(`Process exit with code: ${code}`);
-      } else if (signal) {
-        res.status(500).send(`Process killed with signal: ${signal}`);
-      } else {
-        console.log("success ✅");
+    console.log("database is restored. success ✅");
 
-        // remove dbBackupfile
-        unlink(get(temp, "dbBackupFile.path"));
+    // remove dbBackupfile
+    await unlink(get(temp, "dbBackupFile.path"));
 
-        const zipPath = config.CACHE_PATH + "/temp.zip";
-        await rename(get(temp, "folderBackupFile.path"), zipPath);
+    const zipPath = config.CACHE_PATH + "/temp.zip";
+    await rename(get(temp, "folderBackupFile.path"), zipPath);
 
-        const outputFolderPath = config.CACHE_PATH + "/temp";
+    const outputFolderPath = config.CACHE_PATH + "/temp";
 
-        unzipHander({
-          zipPath: zipPath,
-          outputFolderPath,
-          cb: () => afterUnzipCbHandler({ name, outputFolderPath, fail: (e) => res.status(500).send(e), success: (s) => res.send(s) }),
-          fail: (err) => res.status(500).send(`Error occurred during extraction: ${err}`),
-        });
-      }
-    });
+    await unzipHander({ zipPath, outputFolderPath });
+    await unlink(zipPath);
+
+    isFolder(folder_path) &&
+      fs.rmSync(folder_path, { recursive: true }, (error) => {
+        if (error) res.status(500).send(`Error removing folder: ${error}}`);
+      });
+
+    const result = await rename(outputFolderPath, folder_path);
+
+    client.close();
+    if (result) return res.send("Completed successufully ✅");
+    return res.status(500).send("ERROR: it couldn't rename folder");
   } catch (error) {
     console.error("Error occurred during restore:", error);
-  } finally {
     client.close();
+  } finally {
   }
 };
 

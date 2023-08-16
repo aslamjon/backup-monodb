@@ -21,7 +21,7 @@ function rename(previousName, newName) {
     });
   });
 }
-function unlink(tempPath) {
+const unlink = async (tempPath) => {
   return new Promise((resolve, reject) => {
     fs.unlink(tempPath, (err) => {
       if (err) {
@@ -31,7 +31,7 @@ function unlink(tempPath) {
       resolve(1);
     });
   });
-}
+};
 // ************************- encoding and decoding -********************************
 const encodingBase64 = (filePath) => {
   const file = fs.readFileSync(filePath, { encoding: "base64" });
