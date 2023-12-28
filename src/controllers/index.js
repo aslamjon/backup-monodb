@@ -50,7 +50,7 @@ const restoreMongodb = async ({ name, path, username, password }) => {
       console.log("stdout", data);
     });
     child.stderr.on("data", (data) => {
-      console.log("stderr", Buffer.from(data).toString());
+      // console.log("stderr", Buffer.from(data).toString());
     });
 
     return new Promise((resolve, reject) => {
@@ -79,15 +79,15 @@ const restoreDatabase = async (req, res) => {
       temp[item.fieldname] = item;
     });
 
-    if (!get(temp, "dbBackupFile")) return res.status(400).send({ error: "dbBackupFile should not be empty" });
-    if (!get(temp, "folderBackupFile")) return res.status(400).send({ error: "folderBackupFile should not be empty" });
-
     const configJSON = readConfig();
     const dbConfig = get(configJSON, "dbs", []).find((db) => db.name === name);
     if (!dbConfig) return res.status(400).send({ error: "db not found" });
 
     let { db_username, db_password, folder_path, folder_path_dev } = dbConfig;
     if (!isProduction()) folder_path = folder_path_dev;
+
+    if (!get(temp, "dbBackupFile")) return res.status(400).send({ error: "dbBackupFile should not be empty" });
+    if (!get(temp, "folderBackupFile") && folder_path) return res.status(400).send({ error: "folderBackupFile should not be empty" });
 
     client = new MongoClient(url, {
       useNewUrlParser: true,
@@ -111,25 +111,29 @@ const restoreDatabase = async (req, res) => {
 
     // remove dbBackupfile
     await unlink(get(temp, "dbBackupFile.path"));
+    if (get(temp, "folderBackupFile.path")) {
+      const zipPath = config.CACHE_PATH + "/temp.zip";
+      await rename(get(temp, "folderBackupFile.path"), zipPath);
 
-    const zipPath = config.CACHE_PATH + "/temp.zip";
-    await rename(get(temp, "folderBackupFile.path"), zipPath);
+      const outputFolderPath = config.CACHE_PATH + "/temp";
 
-    const outputFolderPath = config.CACHE_PATH + "/temp";
+      await unzipHander({ zipPath, outputFolderPath });
+      await unlink(zipPath);
+    }
 
-    await unzipHander({ zipPath, outputFolderPath });
-    await unlink(zipPath);
+    if (folder_path) {
+      isFolder(folder_path) &&
+        fs.rmSync(folder_path, { recursive: true }, (error) => {
+          if (error) res.status(500).send(`Error removing folder: ${error}}`);
+        });
 
-    isFolder(folder_path) &&
-      fs.rmSync(folder_path, { recursive: true }, (error) => {
-        if (error) res.status(500).send(`Error removing folder: ${error}}`);
-      });
-
-    const result = await rename(outputFolderPath, folder_path);
+      const result = await rename(outputFolderPath, folder_path);
+      client.close();
+      if (result) return res.send("Completed successufully ✅: Folder is renamed");
+    }
 
     client.close();
-    if (result) return res.send("Completed successufully ✅");
-    return res.status(500).send("ERROR: it couldn't rename folder");
+    return res.send("Completed successufully ✅");
   } catch (error) {
     console.error("Error occurred during restore:", error);
     client.close();
