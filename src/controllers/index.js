@@ -111,11 +111,12 @@ const restoreDatabase = async (req, res) => {
 
     // remove dbBackupfile
     await unlink(get(temp, "dbBackupFile.path"));
+
+    const outputFolderPath = config.CACHE_PATH + "/temp";
+
     if (get(temp, "folderBackupFile.path")) {
       const zipPath = config.CACHE_PATH + "/temp.zip";
       await rename(get(temp, "folderBackupFile.path"), zipPath);
-
-      const outputFolderPath = config.CACHE_PATH + "/temp";
 
       await unzipHander({ zipPath, outputFolderPath });
       await unlink(zipPath);
