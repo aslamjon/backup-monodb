@@ -27,6 +27,16 @@
       "log_file_path_dev": "/Users/aslamjonibragimov/GitHub/ticket-uz-bot/app.log",
       "db_username": "ticket-uz-bot",
       "db_password": "0jOS6v8BUEFYnbgBHc1V97PS8NtuY3VzyOX75e8heA0mivgOcN"
+    },
+    {
+      "name": "xaridor",
+      "group_chat_id": "-1001891769962",
+      "log_file_path": "/root/xaridor/source/app.log",
+      "log_file_path_dev": "/Users/aslamjonibragimov/GitHub/xaridor-backend/app.log",
+      "folder_path": "/root/data/xaridor-data",
+      "folder_path_dev": "/Users/aslamjonibragimov/TEST/data/xaridor/data",
+      "db_username": "xaridor",
+      "db_password": "vDPJ2vzz2TA9yCYBW9uVvO15t3ZhnLoZb4PLU6TTJ6qKe7ebAA"
     }
   ]
 }
