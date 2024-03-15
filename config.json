@@ -34,7 +34,7 @@
       "log_file_path": "/root/xaridor/source/app.log",
       "log_file_path_dev": "/Users/aslamjonibragimov/GitHub/xaridor-backend/app.log",
       "folder_path": "/root/data/xaridor-data",
-      "folder_path_dev": "/Users/aslamjonibragimov/TEST/data/xaridor/data",
+      "folder_path_dev": "/Users/aslamjonibragimov/TEST/data/xaridor",
       "db_username": "xaridor",
       "db_password": "vDPJ2vzz2TA9yCYBW9uVvO15t3ZhnLoZb4PLU6TTJ6qKe7ebAA"
     }
