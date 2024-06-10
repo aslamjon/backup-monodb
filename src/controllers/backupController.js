@@ -3,10 +3,11 @@ const fs = require("fs");
 const { isEmpty } = require("lodash");
 const { spawn } = require("child_process");
 
-const { unlink, isProduction, copyFileAsync } = require("../utils/utiles");
+const { isProduction, copyFileAsync } = require("../utils/utiles");
 const config = require("../config");
 const { bot } = require("../integration/telegram");
 const { sendFileToChat } = require("./telegramController");
+const moment = require("moment");
 
 const nodeEnv = process.env.NODE_ENV || "development";
 
@@ -37,7 +38,9 @@ const dumpFromDatabase = async ({ name, filePath }) => {
 };
 
 const archiveFolder = async ({ name, folder_path }) => {
-  const outputFilePath = `${config.CACHE_PATH}/${name}_${nodeEnv}_backup_folder.zip`;
+  const date = moment().format("DD_MM_YYYY_HH_mm");
+
+  const outputFilePath = `${config.CACHE_PATH}/${name}_${nodeEnv}_${date}_backup_folder.zip`;
 
   const output = fs.createWriteStream(outputFilePath);
   const archive = archiver("zip", {
@@ -86,14 +89,16 @@ const backupDatabase = async ({ name, group_chat_id, folder_path, folder_path_de
     const databases = await adminDb.admin().listDatabases();
     const dbFound = databases.databases.find((item) => item.name === name);
 
+    const date = moment().format("DD_MM_YYYY_HH_mm");
+
     if (isEmpty(dbFound)) return;
 
-    const filePath = `${config.CACHE_PATH}/${name}_${nodeEnv}_backup.gzip`;
+    const filePath = `${config.CACHE_PATH}/${name}_${nodeEnv}_${date}_backup.gzip`;
 
     await dumpFromDatabase({ name, filePath });
 
     await sendFileWithTelegramBot(group_chat_id, filePath, "gzip");
-    const destinationFilePathOfLog = `${config.CACHE_PATH}/${name}_${nodeEnv}_backup_logFile.log`;
+    const destinationFilePathOfLog = `${config.CACHE_PATH}/${name}_${nodeEnv}_${date}_backup_logFile.log`;
 
     await copyFileAsync(log_file_path, destinationFilePathOfLog);
 
