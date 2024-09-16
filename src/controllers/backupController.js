@@ -108,7 +108,13 @@ const backupDatabase = async ({ name, group_chat_id, folder_path, folder_path_de
       const outputFilePath = await archiveFolder({ name, folder_path });
       // sendFileWithTelegramBot(group_chat_id, outputFilePath, "zip");
       await sendFileToChat(group_chat_id, outputFilePath, name);
+
+      fs.unlinkSync(outputFilePath);
     }
+
+    fs.unlinkSync(destinationFilePathOfLog);
+    fs.unlinkSync(filePath);
+
     next(index + 1);
   } catch (error) {
     console.error("Error occurred during backup:", error);
