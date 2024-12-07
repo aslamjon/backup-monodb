@@ -92,6 +92,8 @@ app.use((err, req, res, next) => {
 const PORT = config.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on ${PORT}`);
+  console.log(config, process.env.NODE_ENV);
+
   !config.isTest && startTelegramBot();
   if (config.isProduction) init();
   !config.isTest && cron.schedule(`0 0 * * *`, init);
