@@ -6,6 +6,8 @@ const checkProduction = () => {
   return isProduction;
 };
 
+const isTest = process.env.NODE_ENV === "test";
+
 const isProduction = checkProduction();
 
 const getEnvironments = () => {
@@ -45,6 +47,7 @@ const config = {
   PORT: process.env.PORT,
   SECRET: process.env.SALT,
   isProduction,
+  isTest,
   CACHE_PATH: path.join(__dirname, isProduction ? process.env.CACHE_PATH_PRODUCTION : process.env.CACHE_PATH_DEVELOPMENT),
   TELEGRAM_BOT_API: isProduction ? process.env.TELEGRAM_BOT_API_PRODUCTION : process.env.TELEGRAM_BOT_API_DEVELOPMENT,
   TELEGRAM_BOT_USERNAME: isProduction ? process.env.TELEGRAM_BOT_USERNAME_PRODUCTION : process.env.TELEGRAM_BOT_USERNAME_DEVELOPMENT,

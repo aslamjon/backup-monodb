@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "node src/index.js",
-    "deploy": "pm2 update && pm2 deploy production exce 'npm install && pm2 startOrRestart ecosystem.config.js --env production'",
+    "deploy": "pm2 update && pm2 deploy production exce 'pm2 startOrRestart ecosystem.config.js --env production'",
+    "deploy-dev": "pm2 update && pm2 deploy test exce 'pm2 startOrRestart ecosystem.config.js --env test'",
     "dev": "nodemon ./src/index.js"
   },
   "repository": {
