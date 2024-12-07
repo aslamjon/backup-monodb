@@ -23,7 +23,7 @@ module.exports = {
       "pre-setup": "pwd",
       "pre-deploy-local": "echo 'This is a local deployment'",
       // "post-deploy": "cp ../.env ./ && npm install && pm2 startOrRestart ecosystem.config.js --env production",
-      "post-deploy": "npm install && npm run build && pm2 startOrRestart ecosystem.config.js --env production",
+      "post-deploy": "npm install && npm run build && pm2 startOrRestart ecosystem.config.js --env test",
     },
     production: {
       user: "root",
@@ -33,7 +33,7 @@ module.exports = {
       path: "/root/backup",
       "pre-setup": "pwd",
       "pre-deploy-local": "echo 'This is a local deployment'",
-      "post-deploy": "npm install && npm run build && pm2 startOrRestart ecosystem.config.js --env test",
+      "post-deploy": "npm install && npm run build && pm2 startOrRestart ecosystem.config.js --env production",
     },
   },
 };
