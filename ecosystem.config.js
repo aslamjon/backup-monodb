@@ -14,7 +14,7 @@ module.exports = {
 
   // Deployment Configuration
   deploy: {
-    production: {
+    test: {
       user: "root",
       host: "94.250.202.249",
       ref: "origin/main",
@@ -25,7 +25,7 @@ module.exports = {
       // "post-deploy": "cp ../.env ./ && npm install && pm2 startOrRestart ecosystem.config.js --env production",
       "post-deploy": "npm install && npm run build && pm2 startOrRestart ecosystem.config.js --env production",
     },
-    test: {
+    production: {
       user: "root",
       host: "81.17.102.141",
       ref: "origin/main",

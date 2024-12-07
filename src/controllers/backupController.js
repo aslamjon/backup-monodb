@@ -76,8 +76,10 @@ const sendFileWithTelegramBot = async (chat_id, filePath, fileType) => {
   }
 };
 
-const backupDatabase = async ({ name, group_chat_id, folder_path, folder_path_dev, log_file_path, log_file_path_dev, client, next, index }) => {
+const backupDatabase = async ({ name, group_chat_id, folder_path, folder_path_dev, log_file_path, log_file_path_dev, client, next, index, type }) => {
   try {
+    if (type === "test") return;
+
     if (!isProduction()) {
       folder_path = folder_path_dev;
       log_file_path = log_file_path_dev;
