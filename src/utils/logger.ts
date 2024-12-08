@@ -4,7 +4,7 @@ import { formatDate } from "./utiles";
 const customFormat = format.combine(
   format.timestamp(),
   format.printf((info) => {
-    return `${formatDate("MM-dd-yyyy HH:mm:ss", new Date(info.timestamp))} - ${info.level.toUpperCase().padEnd(7)} - ${info.message}`;
+    return `${formatDate("MM-dd-yyyy HH:mm:ss", new Date(info.timestamp ?? 0))} - ${info.level.toUpperCase().padEnd(7)} - ${info.message}`;
   })
 );
 
