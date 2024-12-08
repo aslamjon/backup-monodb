@@ -2,7 +2,7 @@ module.exports = {
   apps: [
     {
       name: "backup",
-      script: "src/index.js",
+      script: "dist/index.js",
       env_production: {
         NODE_ENV: "production",
       },
