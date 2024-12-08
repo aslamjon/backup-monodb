@@ -2,7 +2,7 @@
   "name": "backup-monodb",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "./src/index.ts",
   "scripts": {
     "dev": "nodemon --exec 'ts-node' ./src/index.ts",
     "deploy": "pm2 update && pm2 deploy production exce 'pm2 startOrRestart ecosystem.config.js --env production'",
