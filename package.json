@@ -4,11 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node src/index.js",
+    "dev": "nodemon --exec 'ts-node' ./src/index.ts",
     "deploy": "pm2 update && pm2 deploy production exce 'pm2 startOrRestart ecosystem.config.js --env production'",
     "deploy-dev": "pm2 update && pm2 deploy test exce 'pm2 startOrRestart ecosystem.config.js --env test'",
-    "dev": "nodemon ./src/index.js",
-    "build": "echo 'HELLO'"
+    "build": "tsc --preserveConstEnums -p tsconfig.json"
   },
   "repository": {
     "type": "git",
@@ -23,6 +22,7 @@
   "homepage": "https://github.com/aslamjon/backup-monodb#readme",
   "dependencies": {
     "archiver": "^5.3.1",
+    "axios": "^1.7.9",
     "compression": "^1.7.4",
     "cors": "^2.8.5",
     "dotenv": "^16.2.0",
@@ -38,5 +38,8 @@
     "telegram": "^2.17.10",
     "unzipper": "^0.10.14",
     "winston": "^3.9.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
   }
 }

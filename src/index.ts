@@ -1,19 +1,18 @@
 // Requiring module
-const express = require("express");
-const cors = require("cors");
-const path = require("path");
-const compression = require("compression");
+import express from "express";
+import cors from "cors";
+import path from "path";
+import compression from "compression";
 require("dotenv").config();
-const logger = require("./utils/logger");
-const rateLimit = require("express-rate-limit");
-const cron = require("node-cron");
+import logger from "./utils/logger";
+import rateLimit from "express-rate-limit";
+import cron from "node-cron";
 
-const config = require("./config");
-
-const { init: startTelegramBot } = require("./integration/telegram/index");
-const { createDefaultFolder, errorHandlerBot } = require("./utils/utiles");
-const { init } = require("./controllers");
-const router = require("./router");
+import { init as startTelegramBot } from "./integration/telegram/index";
+import { createDefaultFolder, errorHandlerBot } from "./utils/utiles";
+import { init } from "./controllers";
+import router from "./router";
+import { CACHE_PATH, isProduction, isTest, PORT } from "./config";
 
 const app = express();
 
@@ -46,13 +45,13 @@ app.use("/api", limiter);
 app.use(compression({ filter: shouldCompress }));
 
 try {
-  createDefaultFolder(config.CACHE_PATH);
+  createDefaultFolder(CACHE_PATH);
 } catch (e) {
-  errorHandlerBot(e, { name: "index.js" }, "main index.js");
+  errorHandlerBot(e, "index.js", "main index.js");
 }
 
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json({ extended: true })); // if json come backend then it convert to obj in req.body
+app.use(express.urlencoded({ limit: "1mb", extended: true }));
+app.use(express.json({ limit: "1mb" })); // if json come backend then it convert to obj in req.body
 
 app.use("/", express.static(path.join(__dirname, "./public")));
 
@@ -61,7 +60,7 @@ app.use("/api", router);
 app.use(express.static("routes"));
 
 // catch 404 and forward to error handler
-app.use(async (req, res, next) => {
+app.use(async (req, _res, next) => {
   try {
     throw new Error("API Not Found. Please check it and try again.");
   } catch (err) {
@@ -89,10 +88,9 @@ app.use((err, req, res, next) => {
   next();
 });
 
-const PORT = config.PORT || 3000;
-app.listen(PORT, () => {
-  !config.isTest && startTelegramBot();
-  if (config.isProduction) init();
-  !config.isTest && cron.schedule(`0 0 * * *`, init);
+app.listen(PORT || 3000, () => {
+  !isTest && startTelegramBot();
+  if (isProduction) init();
+  !isTest && cron.schedule(`0 0 * * *`, init);
   // cron.schedule(`* * * * *`, init);
 });

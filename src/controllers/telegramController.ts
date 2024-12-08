@@ -1,16 +1,15 @@
-const { TelegramClient } = require("telegram");
-const { StringSession } = require("telegram/sessions");
-const { get } = require("lodash");
-const fs = require("fs");
+import { TelegramClient } from "telegram";
+import { StringSession } from "telegram/sessions";
+import { get } from "lodash";
+import fs from "fs";
+import { isProduction, TELEGRAM_API_HASH, TELEGRAM_SESSION, TELEGRAM_USER_API_ID } from "../config";
 
-const config = require("../config");
-
-const apiId = config.TELEGRAM_USER_API_ID * 1;
-const apiHash = config.TELEGRAM_APIHASH;
-const session = config.TELEGRAM_SESSION;
+const apiId = Number(TELEGRAM_USER_API_ID);
+const apiHash = TELEGRAM_API_HASH;
+const session = TELEGRAM_SESSION;
 const stringSession = new StringSession(session);
 
-const getPeerId = async (chatIdOrUserName) => {
+const getPeerId = async (chatIdOrUserName: string) => {
   const client = new TelegramClient(stringSession, apiId, apiHash, { connectionRetries: 5 });
   try {
     await client.connect();
@@ -24,7 +23,7 @@ const getPeerId = async (chatIdOrUserName) => {
   } catch (err) {}
 };
 
-const sendFileToChat = async (chatIdOrUserName, filePath, caption) => {
+const sendFileToChat = async (chatIdOrUserName: string, filePath: string, caption: string) => {
   const client = new TelegramClient(stringSession, apiId, apiHash, { connectionRetries: 5 });
   try {
     await client.connect();
@@ -36,13 +35,13 @@ const sendFileToChat = async (chatIdOrUserName, filePath, caption) => {
       const fileSizeInKilobytes = fileSizeInBytes / 1024;
       const fileSizeInMegabytes = fileSizeInKilobytes / 1024;
 
-      const result = await client.sendFile(chatIdOrUserName, {
+      await client.sendFile(chatIdOrUserName, {
         file: filePath,
         caption,
         progressCallback: (process) => {
-          !config.isProduction && console.log(`${(process * 100).toFixed(3)}% of 100% - ${caption}`);
+          !isProduction && console.log(`${(process * 100).toFixed(3)}% of 100% - ${caption}`);
 
-          if ((process * 100).toFixed(0) % 2 === 0) {
+          if (Number((process * 100).toFixed(0)) % 2 === 0) {
             const uploaded = (fileSizeInBytes * (process * 100)) / 100;
             const uploadedKilobytes = uploaded / 1024;
             const uploadedMegabytes = uploadedKilobytes / 1024;
@@ -70,12 +69,12 @@ const sendFileToChat = async (chatIdOrUserName, filePath, caption) => {
   }
 };
 
-const sendMessageToChat = async (chatIdOrUserName, message) => {
+const sendMessageToChat = async (chatIdOrUserName: string, message: string) => {
   const client = new TelegramClient(stringSession, apiId, apiHash, { connectionRetries: 5 });
   try {
     await client.connect();
     if (await client.checkAuthorization()) {
-      const result = await client.sendMessage(chatIdOrUserName, { message });
+      await client.sendMessage(chatIdOrUserName, { message });
     } else {
       console.log("I am connected to telegram servers but not logged in with any account/bot");
     }
@@ -86,14 +85,14 @@ const sendMessageToChat = async (chatIdOrUserName, message) => {
   }
 };
 
-const editMessage = async (chatIdOrUserName, messageId, message) => {
+const editMessage = async (chatIdOrUserName: string, messageId: number, message: string) => {
   const client = new TelegramClient(stringSession, apiId, apiHash, { connectionRetries: 5 });
   try {
     await client.connect();
     if (await client.checkAuthorization()) {
       const inputEntity = await client.getInputEntity(chatIdOrUserName);
 
-      const result = await client.editMessage(inputEntity, messageId, { message });
+      await client.editMessage(inputEntity, { message: messageId, text: message });
     } else {
       console.log("I am connected to telegram servers but not logged in with any account/bot");
     }
@@ -104,9 +103,4 @@ const editMessage = async (chatIdOrUserName, messageId, message) => {
   }
 };
 
-module.exports = {
-  sendFileToChat,
-  sendMessageToChat,
-  editMessage,
-  getPeerId,
-};
+export { sendFileToChat, sendMessageToChat, editMessage, getPeerId };

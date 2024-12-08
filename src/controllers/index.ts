@@ -1,16 +1,15 @@
-const { MongoClient } = require("mongodb");
-const fs = require("fs");
-const path = require("path");
-const { isEmpty, get } = require("lodash");
-const { spawn } = require("child_process");
-const unzipper = require("unzipper");
+import { MongoClient } from "mongodb";
+import fs from "fs";
+import path from "path";
+import { isEmpty, get } from "lodash";
+import { spawn } from "child_process";
+import unzipper from "unzipper";
+import { Request, Response } from "express";
 
-const config = require("../config");
-
-const { unlink, isProduction, rename, isFolder } = require("../utils/utiles");
-const { backupDatabase } = require("./backupController");
-
-const url = config.MONGODB_URL;
+import { unlink, rename, isFolder } from "../utils/utiles";
+import { backupDatabase } from "./backupController";
+import { CACHE_PATH, isProduction, MONGODB_URL, ROOT_PASSWORD, ROOT_USERNAME } from "../config";
+import { IRestoreMongodbParams, IUnzipHandlerParams } from "../interface";
 
 const readConfig = () => {
   let configJSON = fs.readFileSync(path.join(__dirname, "../../config.json"), { encoding: "ascii" });
@@ -19,7 +18,7 @@ const readConfig = () => {
   return configJSON;
 };
 
-const unzipHander = async ({ zipPath, outputFolderPath }) => {
+const unzipHandler = async ({ zipPath, outputFolderPath }: IUnzipHandlerParams) => {
   // Create a read stream from the zip file
   const readStream = fs.createReadStream(zipPath);
 
@@ -32,7 +31,7 @@ const unzipHander = async ({ zipPath, outputFolderPath }) => {
   });
 };
 
-const restoreMongodb = async ({ name, path, username, password }) => {
+const restoreMongodb = async ({ name, path, username, password }: IRestoreMongodbParams) => {
   try {
     const child = spawn(`mongorestore`, [
       `--db=${name}`,
@@ -49,7 +48,7 @@ const restoreMongodb = async ({ name, path, username, password }) => {
     child.stdout.on("data", (data) => {
       console.log("stdout", data);
     });
-    child.stderr.on("data", (data) => {
+    child.stderr.on("data", (_data) => {
       // console.log("stderr", Buffer.from(data).toString());
     });
 
@@ -59,20 +58,17 @@ const restoreMongodb = async ({ name, path, username, password }) => {
       child.on("exit", async (code, signal) => {
         if (code) reject(`Process exit with code: ${code}`);
         else if (signal) reject(`Process killed with signal: ${signal}`);
-        else {
-          resolve();
-        }
+        else resolve("");
       });
     });
   } catch (e) {}
 };
-// mongorestore --db=metalmart --archive=./rbac.gzip --gzip
-// mongorestore --db=metalmart --archive=metalmart_production_backup.gzip --gzip --authenticationDatabase admin --username aslamjon --password TpYvzK2jAQy3TXR5576tVWWNJpSGNrKBkFF
-const restoreDatabase = async (req, res) => {
-  let client = {};
+
+const restoreDatabase = async (req: Request & { files: any[] }, res: Response): Promise<void> => {
+  let client: MongoClient;
   try {
     const { name, username, password } = req.body;
-    if (username !== "aslamjon" || password !== "25102000Aslamjon") return res.status(400).send({ error: "username or password is invalid" });
+    if (username !== ROOT_USERNAME || password !== ROOT_PASSWORD) return res.status(400).send({ error: "username or password is invalid" }), null;
 
     const temp = {};
     req.files.forEach((item) => {
@@ -81,17 +77,17 @@ const restoreDatabase = async (req, res) => {
 
     const configJSON = readConfig();
     const dbConfig = get(configJSON, "dbs", []).find((db) => db.name === name);
-    if (!dbConfig) return res.status(400).send({ error: "db not found" });
+    if (!dbConfig) return res.status(400).send({ error: "db not found" }), null;
 
     let { db_username, db_password, folder_path, folder_path_dev } = dbConfig;
-    if (!isProduction()) folder_path = folder_path_dev;
+    if (!isProduction) folder_path = folder_path_dev;
 
-    if (!get(temp, "dbBackupFile")) return res.status(400).send({ error: "dbBackupFile should not be empty" });
-    if (!get(temp, "folderBackupFile") && folder_path) return res.status(400).send({ error: "folderBackupFile should not be empty" });
+    if (!get(temp, "dbBackupFile")) return res.status(400).send({ error: "dbBackupFile should not be empty" }), null;
+    if (!get(temp, "folderBackupFile") && folder_path) return res.status(400).send({ error: "folderBackupFile should not be empty" }), null;
 
-    client = new MongoClient(url, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
+    client = new MongoClient(MONGODB_URL, {
+      // useNewUrlParser: true,
+      // useUnifiedTopology: true,
       auth: {
         username: db_username,
         password: db_password,
@@ -112,29 +108,26 @@ const restoreDatabase = async (req, res) => {
     // remove dbBackupfile
     await unlink(get(temp, "dbBackupFile.path"));
 
-    const outputFolderPath = config.CACHE_PATH + "/temp";
+    const outputFolderPath = CACHE_PATH + "/temp";
 
     if (get(temp, "folderBackupFile.path")) {
-      const zipPath = config.CACHE_PATH + "/temp.zip";
+      const zipPath = CACHE_PATH + "/temp.zip";
       await rename(get(temp, "folderBackupFile.path"), zipPath);
 
-      await unzipHander({ zipPath, outputFolderPath });
+      await unzipHandler({ zipPath, outputFolderPath });
       await unlink(zipPath);
     }
 
     if (folder_path) {
-      isFolder(folder_path) &&
-        fs.rmSync(folder_path, { recursive: true }, (error) => {
-          if (error) res.status(500).send(`Error removing folder: ${error}}`);
-        });
+      isFolder(folder_path) && fs.rmSync(folder_path, { recursive: true });
 
       const result = await rename(outputFolderPath, folder_path);
       client.close();
-      if (result) return res.send("Completed successufully ✅: Folder is renamed");
+      if (result) return res.send("Completed successufully ✅: Folder is renamed"), null;
     }
 
     client.close();
-    return res.send("Completed successufully ✅");
+    return res.send("Completed successufully ✅"), null;
   } catch (error) {
     console.error("Error occurred during restore:", error);
     client.close();
@@ -167,9 +160,9 @@ const init = async () => {
   const next = (index = 0) => {
     if (get(configJSON, "dbs", []).length === index) return;
     const item = get(configJSON, "dbs", [])[index];
-    const client = new MongoClient(url, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
+    const client = new MongoClient(MONGODB_URL, {
+      // useNewUrlParser: true,
+      // useUnifiedTopology: true,
       auth: {
         username: item.db_username,
         password: item.db_password,
@@ -180,4 +173,4 @@ const init = async () => {
   next();
 };
 
-module.exports = { init, restoreDatabase };
+export { init, restoreDatabase };

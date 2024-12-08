@@ -116,4 +116,4 @@ const removeAllOptions = {
   },
 };
 
-module.exports = { contactOptions, locationOption, gameOptions, againOptions, homeOptions, removeAllOptions, startOpitons };
+export { contactOptions, locationOption, gameOptions, againOptions, homeOptions, removeAllOptions, startOpitons };

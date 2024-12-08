@@ -1,17 +1,10 @@
-const fs = require("fs");
-const { errors } = require("./constants");
-const { isString, get, isArray } = require("lodash");
+import { Response } from "express";
+import fs from "fs";
 
-const writeData = (filename, content) => {
-  fs.writeFile(filename, JSON.stringify(content, null, 4), "utf8", (err) => {
-    if (err) console.log(err);
-  });
-};
+const createDefaultFolder = (dirName: string) => !fs.existsSync(dirName) && fs.mkdirSync(dirName, { recursive: true });
 
-const createDefaultFolder = (dirName) => !fs.existsSync(dirName) && fs.mkdirSync(dirName, { recursive: true });
-
-function rename(previousName, newName) {
-  return new Promise((resolve, reject) => {
+function rename(previousName: string, newName: string) {
+  return new Promise((resolve) => {
     fs.rename(previousName, newName, (err) => {
       if (err) {
         console.log("rename", err);
@@ -21,8 +14,8 @@ function rename(previousName, newName) {
     });
   });
 }
-const unlink = async (tempPath) => {
-  return new Promise((resolve, reject) => {
+const unlink = async (tempPath: string) => {
+  return new Promise((resolve) => {
     fs.unlink(tempPath, (err) => {
       if (err) {
         console.log("unlink", err);
@@ -32,20 +25,10 @@ const unlink = async (tempPath) => {
     });
   });
 };
-// ************************- encoding and decoding -********************************
-const encodingBase64 = (filePath) => {
-  const file = fs.readFileSync(filePath, { encoding: "base64" });
-  // return file.toString('base64');
-  return file;
-};
 
-const decodingBase64 = (data, fileName) => {
-  let buff = new Buffer.from(data, "base64");
-  fs.writeFileSync(fileName, buff);
-};
 // **********************************- date format -************************************************
 
-function formatDate(format, date = new Date(), utc) {
+function formatDate(format: string, date = new Date(), utc?: boolean) {
   // const map = {
   //     mm: date.getMonth() + 1,
   //     dd: date.getDate(),
@@ -59,7 +42,7 @@ function formatDate(format, date = new Date(), utc) {
   let dddd = ["\x02", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   let ddd = ["\x03", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-  function ii(i, len) {
+  function ii(i: number, len?: number) {
     let s = i + "";
     len = len || 2;
     while (s.length < len) s = "0" + s;
@@ -138,7 +121,7 @@ function formatDate(format, date = new Date(), utc) {
 
 const ISODate = (date = new Date()) => date.toISOString();
 
-function setYear(year, date = new Date()) {
+function setYear(year: number) {
   let Year = new Date().setFullYear(year);
   return new Date(Year);
 }
@@ -150,26 +133,21 @@ function getTime(format = 24, date = new Date()) {
 
 // ********************************************************
 
-const isInt = (n) => Number(n) === n && n % 1 === 0;
+const isInt = (n: number) => Number(n) === n && n % 1 === 0;
 
-const isFloat = (n) => Number(n) === n && n % 1 !== 0;
+const isFloat = (n: number) => Number(n) === n && n % 1 !== 0;
 
-const toFixed = (number, n = 2) => Number(Number(number).toFixed(n));
+const toFixed = (number: number, n = 2) => Number(Number(number).toFixed(n));
 
-const errorHandling = (e, functionName, res, fileName) => {
-  require("./logger").error(`${e.message} -> ${fileName} -> ${functionName} -> \n\n ${e.stack}`);
-  errors.SERVER_ERROR(res, { message: e.message });
+const errorHandling = (e: Error, functionName: string, res: Response, fileName: string) => {
+  require("./logger").default.error(`${e.message} -> ${fileName} -> ${functionName} -> \n\n ${e.stack}`);
+  res.status(500).send({ message: e.message });
 };
 
-const errorHandlerBot = (e, functionName, fileName) => require("./logger").error(`${e.message} -> ${fileName} -> ${functionName} -> \n\n ${e.stack}`);
+const errorHandlerBot = (e: Error, functionName: string, fileName: string) =>
+  require("./logger").default.error(`${e.message} -> ${fileName} -> ${functionName} -> \n\n ${e.stack}`);
 
-const smsCodeGenerator = () => {
-  let code = Math.floor(Math.random() * 1000000);
-  if (code < 100000) return smsCodeGenerator();
-  return code;
-};
-
-const isNum = (num) => {
+const isNum = (num: string) => {
   num = `${num}`;
   let newNum = parseInt(num);
   if (isNaN(newNum)) return false;
@@ -177,15 +155,9 @@ const isNum = (num) => {
   return false;
 };
 
-const isFile = (path) => fs.existsSync(path) && fs.lstatSync(path).isFile();
+const isFile = (path: string) => fs.existsSync(path) && fs.lstatSync(path).isFile();
 
-const isProduction = () => {
-  const env = process.env.NODE_ENV || "development";
-  const isProduction = env === "production";
-  return isProduction;
-};
-
-function isFolder(path) {
+function isFolder(path: string) {
   try {
     const stats = fs.statSync(path);
     return stats.isDirectory();
@@ -194,7 +166,7 @@ function isFolder(path) {
   }
 }
 
-async function copyFileAsync(sourceFilePath, destinationFilePath) {
+async function copyFileAsync(sourceFilePath: string, destinationFilePath: string) {
   const sourceStream = fs.createReadStream(sourceFilePath);
   const destinationStream = fs.createWriteStream(destinationFilePath);
 
@@ -208,26 +180,21 @@ async function copyFileAsync(sourceFilePath, destinationFilePath) {
 }
 
 // ********************************************************
-module.exports = {
-  writeData,
+export {
   rename,
   unlink,
   errorHandling,
   isInt,
   isFloat,
   toFixed,
-  encodingBase64,
-  decodingBase64,
   formatDate,
   ISODate,
   setYear,
   getTime,
-  smsCodeGenerator,
   errorHandlerBot,
   isNum,
   createDefaultFolder,
   isFile,
-  isProduction,
   isFolder,
   copyFileAsync,
 };

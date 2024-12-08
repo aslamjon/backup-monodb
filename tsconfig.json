@@ -1,0 +1,38 @@
+{
+  "compilerOptions": {
+    "useDefineForClassFields": true,
+    "target": "es6",
+    "module": "commonjs",
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+
+    // "sourceMap": true,
+
+    /* Bundler mode */
+    // "moduleResolution": "node",
+    // "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    // "isolatedModules": true,
+    "noEmit": false,
+
+    /* Linting */
+    "strict": false,
+    // "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "strictFunctionTypes": false,
+
+    "baseUrl": "./"
+    // "paths": {
+    //   "@/*": ["src/*"]
+    // "interfaces": ["src/interfaces/*"],
+    // "utilities": ["src/utilities/*"]
+    // }
+  },
+  "include": ["src/**/*", "src/**/*.json", ".env"],
+  "exclude": ["node_modules"]
+  // "references": [{ "path": "./tsconfig.node.json" }]
+}
