@@ -9,7 +9,7 @@ import { copyFileAsync } from "../utils/utiles";
 
 import { bot } from "../integration/telegram";
 import { sendFileToChat } from "./telegramController";
-import { API_ROOT, CACHE_PATH, isProduction, MONGO_PASSWORD, MONGO_USER, ROOT_PASSWORD, ROOT_USERNAME } from "../config";
+import { API_ROOT, CACHE_PATH, isProduction, isTest, MONGO_PASSWORD, MONGO_USER, ROOT_PASSWORD, ROOT_USERNAME } from "../config";
 import { IBackupDatabaseParams, TConfig } from "../interface";
 import axios from "axios";
 
@@ -110,7 +110,7 @@ const backupDatabase = async ({
   try {
     if ((type === "test" && isProduction) || (type === "production" && !isProduction)) return next(index + 1);
 
-    if (!isProduction) {
+    if (!isProduction && !isTest) {
       folder_path = folder_path_dev;
       log_file_path = log_file_path_dev;
     }
