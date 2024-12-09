@@ -171,7 +171,7 @@ const init = async () => {
   };
   await next();
 
-  axios.get(`${API_TEST_SERVER}/api/rebackup`);
+  isProduction && axios.get(`${API_TEST_SERVER}/api/rebackup`);
 };
 
 export { init, restoreDatabase };
