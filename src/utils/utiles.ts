@@ -180,6 +180,15 @@ async function copyFileAsync(sourceFilePath: string, destinationFilePath: string
 }
 
 // ********************************************************
+
+const replaceAll = (value: string, target: string, replacement: string) => {
+  let temp = "";
+  for (const item of value) {
+    temp += item === target ? replacement : item;
+  }
+  return temp;
+};
+
 export {
   rename,
   unlink,
@@ -197,4 +206,5 @@ export {
   isFile,
   isFolder,
   copyFileAsync,
+  replaceAll,
 };

@@ -6,7 +6,7 @@ import moment from "moment";
 import FormData from "form-data";
 import axios from "axios";
 
-import { copyFileAsync } from "../utils/utiles";
+import { copyFileAsync, replaceAll } from "../utils/utiles";
 
 import { bot } from "../integration/telegram";
 import { sendFileToChat } from "./telegramController";
@@ -151,7 +151,7 @@ const backupDatabase = async ({
 
     const filePath = `${CACHE_PATH}/${name}_${nodeEnv}_${date}_backup.gzip`;
 
-    await sendMessage(type, group_chat_id, `#${name}`);
+    await sendMessage(type, group_chat_id, `#${replaceAll(name, "-", "_")}`);
 
     await dumpFromDatabase({ name, filePath });
 
