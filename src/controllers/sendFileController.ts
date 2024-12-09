@@ -1,10 +1,11 @@
 import { Request, Response } from "express";
 import { get } from "lodash";
+import { TelegramClient } from "telegram";
+import { StringSession } from "telegram/sessions";
 import { renameSync, statSync, unlinkSync } from "fs";
 import { bot } from "../integration/telegram";
 import { CACHE_PATH, isProduction, ROOT_PASSWORD, ROOT_USERNAME, TELEGRAM_API_HASH, TELEGRAM_SESSION, TELEGRAM_USER_API_ID } from "../config";
-import { TelegramClient } from "telegram";
-import { StringSession } from "telegram/sessions";
+import { IMulterFile } from "../interface";
 
 const sendFileWithBot = async (req: Request & { files: any[] }, res: Response) => {
   const { chatId } = req.params;
@@ -15,7 +16,7 @@ const sendFileWithBot = async (req: Request & { files: any[] }, res: Response) =
 
     if (username !== ROOT_USERNAME || password !== ROOT_PASSWORD) return bot.sendMessage(chatId, "username or password is invalid"), null;
 
-    const temp: Record<string, Express.Multer.File> = {};
+    const temp: Record<string, IMulterFile> = {};
     req.files.forEach((item) => (temp[item.fieldname] = item));
 
     if (!temp?.file) return await bot.sendMessage(chatId, "file should not be empty"), null;
