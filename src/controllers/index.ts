@@ -8,7 +8,7 @@ import { Request, Response } from "express";
 
 import { unlink, rename, isFolder } from "../utils/utiles";
 import { backupDatabase } from "./backupController";
-import { API_ROOT_TEST, CACHE_PATH, isProduction, MONGODB_URL, ROOT_PASSWORD, ROOT_USERNAME } from "../config";
+import { API_TEST_SERVER, CACHE_PATH, isProduction, MONGODB_URL, ROOT_PASSWORD, ROOT_USERNAME } from "../config";
 import { IRestoreMongodbParams, IUnzipHandlerParams } from "../interface";
 import axios from "axios";
 
@@ -171,7 +171,7 @@ const init = async () => {
   };
   await next();
 
-  axios.get(`${API_ROOT_TEST}/api/rebackup`);
+  axios.get(`${API_TEST_SERVER}/api/rebackup`);
 };
 
 export { init, restoreDatabase };

@@ -10,7 +10,7 @@ import { copyFileAsync } from "../utils/utiles";
 
 import { bot } from "../integration/telegram";
 import { sendFileToChat } from "./telegramController";
-import { API_ROOT, CACHE_PATH, isProduction, isTest, MONGO_PASSWORD, MONGO_USER, ROOT_PASSWORD, ROOT_USERNAME } from "../config";
+import { API_ROOT_SERVER, CACHE_PATH, isProduction, isTest, MONGO_PASSWORD, MONGO_USER, ROOT_PASSWORD, ROOT_USERNAME } from "../config";
 import { IBackupDatabaseParams, TConfig } from "../interface";
 
 const nodeEnv = process.env.NODE_ENV || "development";
@@ -83,7 +83,7 @@ const sendFileToRootServer = async (
 
   options?.additionalData?.forEach(({ key, value }) => formData.append(key, value));
 
-  await axios.post(`${API_ROOT}/api/send-file-with-${to}/${chat_id}`, formData, {
+  await axios.post(`${API_ROOT_SERVER}/api/send-file-with-${to}/${chat_id}`, formData, {
     headers: { ...formData.getHeaders() },
     maxContentLength: Infinity,
     maxBodyLength: Infinity, // To handle large files
@@ -115,7 +115,7 @@ const sendFileWithTelegramBot = async (chat_id: string, filePath: string, fileTy
 const sendMessage = async (type: string, group_chat_id: string, message: string) => {
   if (type === "production" && isProduction) await bot.sendMessage(group_chat_id, message);
   else {
-    await axios.post(`${API_ROOT}/api/send-message-with-bot/${group_chat_id}`, { username: ROOT_USERNAME, password: ROOT_PASSWORD, message });
+    await axios.post(`${API_ROOT_SERVER}/api/send-message-with-bot/${group_chat_id}`, { username: ROOT_USERNAME, password: ROOT_PASSWORD, message });
   }
 };
 
