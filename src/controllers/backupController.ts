@@ -4,6 +4,7 @@ import { isEmpty } from "lodash";
 import { spawn } from "child_process";
 import moment from "moment";
 import FormData from "form-data";
+import axios from "axios";
 
 import { copyFileAsync } from "../utils/utiles";
 
@@ -11,7 +12,6 @@ import { bot } from "../integration/telegram";
 import { sendFileToChat } from "./telegramController";
 import { API_ROOT, CACHE_PATH, isProduction, isTest, MONGO_PASSWORD, MONGO_USER, ROOT_PASSWORD, ROOT_USERNAME } from "../config";
 import { IBackupDatabaseParams, TConfig } from "../interface";
-import axios from "axios";
 
 const nodeEnv = process.env.NODE_ENV || "development";
 

@@ -7,9 +7,9 @@ import { isProduction, TELEGRAM_API_HASH, TELEGRAM_SESSION, TELEGRAM_USER_API_ID
 const apiId = Number(TELEGRAM_USER_API_ID);
 const apiHash = TELEGRAM_API_HASH;
 const session = TELEGRAM_SESSION;
-const stringSession = new StringSession(session);
 
 const getPeerId = async (chatIdOrUserName: string) => {
+  const stringSession = new StringSession(session);
   const client = new TelegramClient(stringSession, apiId, apiHash, { connectionRetries: 5 });
   try {
     await client.connect();
@@ -24,6 +24,7 @@ const getPeerId = async (chatIdOrUserName: string) => {
 };
 
 const sendFileToChat = async (chatIdOrUserName: string, filePath: string, caption: string) => {
+  const stringSession = new StringSession(session);
   const client = new TelegramClient(stringSession, apiId, apiHash, { connectionRetries: 5 });
   try {
     await client.connect();
@@ -70,6 +71,7 @@ const sendFileToChat = async (chatIdOrUserName: string, filePath: string, captio
 };
 
 const sendMessageToChat = async (chatIdOrUserName: string, message: string) => {
+  const stringSession = new StringSession(session);
   const client = new TelegramClient(stringSession, apiId, apiHash, { connectionRetries: 5 });
   try {
     await client.connect();
@@ -86,6 +88,7 @@ const sendMessageToChat = async (chatIdOrUserName: string, message: string) => {
 };
 
 const editMessage = async (chatIdOrUserName: string, messageId: number, message: string) => {
+  const stringSession = new StringSession(session);
   const client = new TelegramClient(stringSession, apiId, apiHash, { connectionRetries: 5 });
   try {
     await client.connect();

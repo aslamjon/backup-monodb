@@ -12,6 +12,7 @@ const getVariable = (name: string, isCheckAllEnv: boolean = false): string => {
 
 export const APP_NAME = "BACKUP";
 export const API_ROOT = getVariable("APP_BASE_URL", true);
+export const API_ROOT_TEST = process.env.APP_BASE_URL_TEST;
 export const MONGODB_URL = getVariable("MONGO_URL");
 export const MONGO_USER = getVariable("MONGO_USER");
 export const MONGO_PASSWORD = getVariable("MONGO_PASSWORD");

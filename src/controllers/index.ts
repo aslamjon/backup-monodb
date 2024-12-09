@@ -8,8 +8,9 @@ import { Request, Response } from "express";
 
 import { unlink, rename, isFolder } from "../utils/utiles";
 import { backupDatabase } from "./backupController";
-import { CACHE_PATH, isProduction, MONGODB_URL, ROOT_PASSWORD, ROOT_USERNAME } from "../config";
+import { API_ROOT_TEST, CACHE_PATH, isProduction, MONGODB_URL, ROOT_PASSWORD, ROOT_USERNAME } from "../config";
 import { IRestoreMongodbParams, IUnzipHandlerParams } from "../interface";
+import axios from "axios";
 
 const readConfig = () => {
   let configJSON = fs.readFileSync(path.join(__dirname, "../../config.json"), { encoding: "ascii" });
@@ -157,20 +158,20 @@ const init = async () => {
   // };
   // get(configJSON, "dbs", []).forEach(callback);
 
-  const next = (index = 0) => {
+  const next = async (index = 0) => {
     if (get(configJSON, "dbs", []).length === index) return;
     const item = get(configJSON, "dbs", [])[index];
     const client = new MongoClient(MONGODB_URL, {
-      // useNewUrlParser: true,
-      // useUnifiedTopology: true,
       auth: {
         username: item.db_username,
         password: item.db_password,
       },
     });
-    backupDatabase({ ...item, client, next, index });
+    await backupDatabase({ ...item, client, next, index });
   };
-  next();
+  await next();
+
+  axios.get(`${API_ROOT_TEST}/api/rebackup`);
 };
 
 export { init, restoreDatabase };
