@@ -26,6 +26,9 @@ const sendFileWithBot = async (req: Request & { files: any[] }, res: Response) =
 
     renameSync(filePath, newFilePath);
 
+    console.log(filePath);
+    console.log(newFilePath);
+
     await bot.sendDocument(chatId, newFilePath);
 
     unlinkSync(newFilePath);
