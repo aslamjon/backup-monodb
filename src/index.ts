@@ -50,8 +50,8 @@ try {
   errorHandlerBot(e, "index.js", "main index.js");
 }
 
-app.use(express.urlencoded({ limit: "1mb", extended: true }));
-app.use(express.json({ limit: "1mb" })); // if json come backend then it convert to obj in req.body
+app.use(express.urlencoded({ limit: "2000mb", extended: true }));
+app.use(express.json({ limit: "2000mb" })); // if json come backend then it convert to obj in req.body
 
 app.use("/", express.static(path.join(__dirname, "./public")));
 
