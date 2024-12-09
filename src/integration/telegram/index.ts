@@ -20,7 +20,8 @@ const errorController = async (error: Error) => {
 };
 
 const init = () => {
-  bot = new TelegramApi(TELEGRAM_BOT_API);
+  process.env.DEBUG = "node-telegram-bot-api";
+  bot = new TelegramApi(TELEGRAM_BOT_API, { webHook: true });
 
   bot.setMyCommands([{ command: "/start", description: "Start" }]);
 
