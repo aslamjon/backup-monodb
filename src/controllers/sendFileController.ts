@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
 import { get } from "lodash";
-import { statSync, unlinkSync } from "fs";
+import { renameSync, statSync, unlinkSync } from "fs";
 import { bot } from "../integration/telegram";
-import { isProduction, ROOT_PASSWORD, ROOT_USERNAME, TELEGRAM_API_HASH, TELEGRAM_SESSION, TELEGRAM_USER_API_ID } from "../config";
+import { CACHE_PATH, isProduction, ROOT_PASSWORD, ROOT_USERNAME, TELEGRAM_API_HASH, TELEGRAM_SESSION, TELEGRAM_USER_API_ID } from "../config";
 import { TelegramClient } from "telegram";
 import { StringSession } from "telegram/sessions";
 
@@ -15,16 +15,19 @@ const sendFileWithBot = async (req: Request & { files: any[] }, res: Response) =
 
     if (username !== ROOT_USERNAME || password !== ROOT_PASSWORD) return bot.sendMessage(chatId, "username or password is invalid"), null;
 
-    const temp = {};
+    const temp: Record<string, Express.Multer.File> = {};
     req.files.forEach((item) => (temp[item.fieldname] = item));
 
-    if (!get(temp, "file")) return bot.sendMessage(chatId, "file should not be empty"), null;
+    if (!temp?.file) return await bot.sendMessage(chatId, "file should not be empty"), null;
 
-    const filePath = get(temp, "file.path");
+    const filePath = temp.file.path;
+    const newFilePath = `${CACHE_PATH}/${temp.file.originalname}`;
 
-    await bot.sendDocument(chatId, filePath);
+    renameSync(filePath, newFilePath);
 
-    unlinkSync(filePath);
+    await bot.sendDocument(chatId, newFilePath);
+
+    unlinkSync(newFilePath);
 
     res.send({ message: "ok" });
   } catch (error) {
@@ -42,7 +45,7 @@ const sendFileWithUser = async (req: Request & { files: any[] }, res: Response) 
   try {
     const { username, password, name } = req.body;
 
-    if (username !== ROOT_USERNAME || password !== ROOT_PASSWORD) return bot.sendMessage(chatId, "username or password is invalid"), null;
+    if (username !== ROOT_USERNAME || password !== ROOT_PASSWORD) return await bot.sendMessage(chatId, "username or password is invalid"), null;
 
     const temp = {};
     req.files.forEach((item) => (temp[item.fieldname] = item));

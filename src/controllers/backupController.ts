@@ -69,8 +69,6 @@ const archiveFolder = async ({ name, folder_path }: { name: string; folder_path:
 
 const sendFileWithTelegramBot = async (chat_id: string, filePath: string, fileType: string, type: TConfig) => {
   try {
-    console.log(type, isProduction);
-
     if (type === "production" && isProduction) await bot.sendDocument(chat_id, filePath);
     else {
       const formData = new FormData();
