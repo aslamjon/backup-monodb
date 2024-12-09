@@ -12,12 +12,20 @@ const sendFileWithBot = async (req: Request & { files: any[] }, res: Response) =
   try {
     const { username, password } = req.body;
 
-    if (username !== ROOT_USERNAME || password !== ROOT_PASSWORD) return bot.sendMessage(chatId, "username or password is invalid"), null;
+    if (username !== ROOT_USERNAME || password !== ROOT_PASSWORD) {
+      await bot.sendMessage(chatId, "username or password is invalid");
+      res.send({ message: "username or password is invalid" });
+      return;
+    }
 
     const temp: Record<string, IMulterFile> = {};
     req.files.forEach((item) => (temp[item.fieldname] = item));
 
-    if (!temp?.file) return await bot.sendMessage(chatId, "file should not be empty"), null;
+    if (!temp?.file) {
+      bot.sendMessage(chatId, "file should not be empty");
+      res.send({ message: "file should not be empty" });
+      return;
+    }
 
     const filePath = temp.file.path;
     const newFilePath = `${CACHE_PATH}/${temp.file.originalname}`;
@@ -44,12 +52,22 @@ const sendFileWithUser = async (req: Request & { files: any[] }, res: Response) 
   try {
     const { username, password, name } = req.body;
 
-    if (username !== ROOT_USERNAME || password !== ROOT_PASSWORD) return await bot.sendMessage(chatId, "username or password is invalid"), null;
+    console.log(name);
+
+    if (username !== ROOT_USERNAME || password !== ROOT_PASSWORD) {
+      await bot.sendMessage(chatId, "username or password is invalid");
+      res.send({ message: "username or password is invalid" });
+      return;
+    }
 
     const temp: Record<string, IMulterFile> = {};
     req.files.forEach((item) => (temp[item.fieldname] = item));
 
-    if (!temp?.file) return bot.sendMessage(chatId, "file should not be empty"), null;
+    if (!temp?.file) {
+      bot.sendMessage(chatId, "file should not be empty");
+      res.send({ message: "file should not be empty" });
+      return;
+    }
 
     const filePath = temp.file.path;
     const newFilePath = `${CACHE_PATH}/${temp.file.originalname}`;
