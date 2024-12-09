@@ -137,7 +137,7 @@ const backupDatabase = async ({
     if (folder_path) {
       const outputFilePath = await archiveFolder({ name, folder_path });
       // sendFileWithTelegramBot(group_chat_id, outputFilePath, "zip");
-      if (type === "production") await sendFileToChat(group_chat_id, outputFilePath, name);
+      if (type === "production" && isProduction) await sendFileToChat(group_chat_id, outputFilePath, name);
       else {
         const formData = new FormData();
         formData.append("file", fs.createReadStream(outputFilePath));
