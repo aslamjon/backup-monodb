@@ -8,11 +8,11 @@ import logger from "./utils/logger";
 import rateLimit from "express-rate-limit";
 import cron from "node-cron";
 
-import { init as startTelegramBot } from "./integration/telegram/index";
+import { bot, init as startTelegramBot } from "./integration/telegram/index";
 import { createDefaultFolder, errorHandlerBot } from "./utils/utiles";
 import { init } from "./controllers";
 import router from "./router";
-import { CACHE_PATH, isProduction, isTest, PORT } from "./config";
+import { CACHE_PATH, isProduction, isTest, PORT, TELEGRAM_BOT_WEBHOOK_PATH } from "./config";
 
 const app = express();
 
@@ -56,6 +56,13 @@ app.use(express.json({ limit: "1mb" })); // if json come backend then it convert
 app.use("/", express.static(path.join(__dirname, "./public")));
 
 app.use("/api", router);
+
+if (isProduction) {
+  app.post("/" + TELEGRAM_BOT_WEBHOOK_PATH, (req, res) => {
+    bot.processUpdate(req.body);
+    res.sendStatus(200);
+  });
+}
 
 app.use(express.static("routes"));
 
