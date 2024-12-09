@@ -9,6 +9,8 @@ import { StringSession } from "telegram/sessions";
 const sendFileWithBot = async (req: Request & { files: any[] }, res: Response) => {
   const { chatId } = req.params;
   try {
+    console.log("req: sendFileWithBot");
+
     const { username, password } = req.body;
 
     if (username !== ROOT_USERNAME || password !== ROOT_PASSWORD) return bot.sendMessage(chatId, "username or password is invalid"), null;

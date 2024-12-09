@@ -69,7 +69,9 @@ const archiveFolder = async ({ name, folder_path }: { name: string; folder_path:
 
 const sendFileWithTelegramBot = async (chat_id: string, filePath: string, fileType: string, type: TConfig) => {
   try {
-    if (type === "production") await bot.sendDocument(chat_id, filePath);
+    console.log(type, isProduction);
+
+    if (type === "production" && isProduction) await bot.sendDocument(chat_id, filePath);
     else {
       const formData = new FormData();
       formData.append("file", fs.createReadStream(filePath));
@@ -83,10 +85,12 @@ const sendFileWithTelegramBot = async (chat_id: string, filePath: string, fileTy
     }
     // unlink(filePath);
   } catch (error) {
-    bot.sendMessage(
-      chat_id,
-      `ERROR: ${error.message}.\nStatusCode: ${error.response.statusCode}. \nCould not send ${fileType} file.\npath: ${filePath}`
-    );
+    console.log(`ERROR: ${error.message}.\nStatusCode: ${error.response.statusCode}. \nCould not send ${fileType} file.\npath: ${filePath}`);
+
+    // bot.sendMessage(
+    //   chat_id,
+    //   `ERROR: ${error.message}.\nStatusCode: ${error.response.statusCode}. \nCould not send ${fileType} file.\npath: ${filePath}`
+    // );
     // console.error(`Error sending ${fileType} files:`, error);
   }
 };
