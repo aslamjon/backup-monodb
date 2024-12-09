@@ -24,6 +24,7 @@ const init = () => {
 
   bot.setMyCommands([{ command: "/start", description: "Start" }]);
 
+  console.log(API_ROOT);
   bot.setWebHook(`${API_ROOT}/${TELEGRAM_BOT_WEBHOOK_PATH}`);
 
   bot.on("message", messageController);
