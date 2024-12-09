@@ -165,7 +165,7 @@ const backupDatabase = async ({
     if (folder_path) {
       const outputFilePath = await archiveFolder({ name, folder_path });
 
-      if (type === "production" && isProduction) await sendFileToChat(group_chat_id, outputFilePath, name);
+      if (type === "production" && isProduction) await sendFileToChat(group_chat_id, outputFilePath);
       else {
         await sendFileToRootServer(group_chat_id, outputFilePath, "user", {
           additionalData: [{ key: "name", value: name }],
