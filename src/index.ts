@@ -97,7 +97,9 @@ app.use((err, req, res, next) => {
 
 app.listen(PORT || 3000, () => {
   !isTest && startTelegramBot();
-  if (isProduction) init();
-  !isTest && cron.schedule(`0 0 * * *`, init);
+  if (isProduction || isTest) {
+    init();
+    cron.schedule(`0 0 * * *`, init);
+  }
   // cron.schedule(`* * * * *`, init);
 });
