@@ -148,6 +148,8 @@ const backupDatabase = async ({
         // Send file to another server
         await axios.post(`${API_ROOT}/api/send-file-with-user/${group_chat_id}`, formData, {
           headers: { ...formData.getHeaders() },
+          maxContentLength: Infinity,
+          maxBodyLength: Infinity, // To handle large files
           onUploadProgress: (progressEvent) => {
             const percentCompleted = Math.round((progressEvent.loaded * 100) / (progressEvent.total ?? 0));
             console.log(`${percentCompleted} %`);
