@@ -10,8 +10,6 @@ import { IMulterFile } from "../interface";
 const sendFileWithBot = async (req: Request & { files: any[] }, res: Response) => {
   const { chatId } = req.params;
   try {
-    console.log("req: sendFileWithBot");
-
     const { username, password } = req.body;
 
     if (username !== ROOT_USERNAME || password !== ROOT_PASSWORD) return bot.sendMessage(chatId, "username or password is invalid"), null;
@@ -25,9 +23,6 @@ const sendFileWithBot = async (req: Request & { files: any[] }, res: Response) =
     const newFilePath = `${CACHE_PATH}/${temp.file.originalname}`;
 
     renameSync(filePath, newFilePath);
-
-    console.log(filePath);
-    console.log(newFilePath);
 
     await bot.sendDocument(chatId, newFilePath);
 
@@ -51,25 +46,28 @@ const sendFileWithUser = async (req: Request & { files: any[] }, res: Response) 
 
     if (username !== ROOT_USERNAME || password !== ROOT_PASSWORD) return await bot.sendMessage(chatId, "username or password is invalid"), null;
 
-    const temp = {};
+    const temp: Record<string, IMulterFile> = {};
     req.files.forEach((item) => (temp[item.fieldname] = item));
 
-    if (!get(temp, "file")) return bot.sendMessage(chatId, "file should not be empty"), null;
+    if (!temp?.file) return bot.sendMessage(chatId, "file should not be empty"), null;
 
-    const filePath = get(temp, "file.path");
+    const filePath = temp.file.path;
+    const newFilePath = `${CACHE_PATH}/${temp.file.originalname}`;
+
+    renameSync(filePath, newFilePath);
 
     await client.connect();
 
     if (await client.checkAuthorization()) {
       const messageResult = await client.sendMessage(chatId, { message: "0% of 100%" });
 
-      const fileSize = statSync(filePath);
+      const fileSize = statSync(newFilePath);
       const fileSizeInBytes = fileSize.size;
       const fileSizeInKilobytes = fileSizeInBytes / 1024;
       const fileSizeInMegabytes = fileSizeInKilobytes / 1024;
 
       await client.sendFile(chatId, {
-        file: filePath,
+        file: newFilePath,
         caption: name,
         progressCallback: (process) => {
           !isProduction && console.log(`${(process * 100).toFixed(3)}% of 100% - ${name}`);
@@ -95,7 +93,7 @@ const sendFileWithUser = async (req: Request & { files: any[] }, res: Response) 
       console.log("I am connected to telegram servers but not logged in with any account/bot");
     }
 
-    unlinkSync(get(temp, "file.path"));
+    unlinkSync(newFilePath);
 
     res.send({ message: "ok" });
   } catch (error) {
