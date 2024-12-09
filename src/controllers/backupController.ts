@@ -67,19 +67,38 @@ const archiveFolder = async ({ name, folder_path }: { name: string; folder_path:
   });
 };
 
+const sendFileToRootServer = async (
+  chat_id: string,
+  filePath: string,
+  to: "bot" | "user" = "bot",
+  options?: {
+    additionalData?: { key: string; value: string }[];
+    onUploadProgress?: (percent: number) => void;
+  }
+) => {
+  const formData = new FormData();
+  formData.append("file", fs.createReadStream(filePath));
+  formData.append("username", ROOT_USERNAME);
+  formData.append("password", ROOT_PASSWORD);
+
+  options?.additionalData?.forEach(({ key, value }) => formData.append(key, value));
+
+  await axios.post(`${API_ROOT}/api/send-file-with-${to}/${chat_id}`, formData, {
+    headers: { ...formData.getHeaders() },
+    maxContentLength: Infinity,
+    maxBodyLength: Infinity, // To handle large files
+    onUploadProgress: (progressEvent) => {
+      const percentCompleted = Math.round((progressEvent.loaded * 100) / (progressEvent.total ?? 0));
+      options?.onUploadProgress?.(percentCompleted);
+    },
+  });
+};
+
 const sendFileWithTelegramBot = async (chat_id: string, filePath: string, fileType: string, type: TConfig) => {
   try {
     if (type === "production" && isProduction) await bot.sendDocument(chat_id, filePath);
     else {
-      const formData = new FormData();
-      formData.append("file", fs.createReadStream(filePath));
-      formData.append("username", ROOT_USERNAME);
-      formData.append("password", ROOT_PASSWORD);
-
-      // Send file to another server
-      await axios.post(`${API_ROOT}/api/send-file-with-bot/${chat_id}`, formData, {
-        headers: { ...formData.getHeaders() },
-      });
+      await sendFileToRootServer(chat_id, filePath);
     }
     // unlink(filePath);
   } catch (error) {
@@ -90,6 +109,13 @@ const sendFileWithTelegramBot = async (chat_id: string, filePath: string, fileTy
     //   `ERROR: ${error.message}.\nStatusCode: ${error.response.statusCode}. \nCould not send ${fileType} file.\npath: ${filePath}`
     // );
     // console.error(`Error sending ${fileType} files:`, error);
+  }
+};
+
+const sendMessage = async (type: string, group_chat_id: string, message: string) => {
+  if (type === "production" && isProduction) await bot.sendMessage(group_chat_id, message);
+  else {
+    await axios.post(`${API_ROOT}/api/send-message-with-bot/${group_chat_id}`, { username: ROOT_USERNAME, password: ROOT_PASSWORD, message });
   }
 };
 
@@ -125,6 +151,8 @@ const backupDatabase = async ({
 
     const filePath = `${CACHE_PATH}/${name}_${nodeEnv}_${date}_backup.gzip`;
 
+    await sendMessage(type, group_chat_id, `#${name}`);
+
     await dumpFromDatabase({ name, filePath });
 
     await sendFileWithTelegramBot(group_chat_id, filePath, "gzip", type);
@@ -136,24 +164,12 @@ const backupDatabase = async ({
 
     if (folder_path) {
       const outputFilePath = await archiveFolder({ name, folder_path });
-      // sendFileWithTelegramBot(group_chat_id, outputFilePath, "zip");
+
       if (type === "production" && isProduction) await sendFileToChat(group_chat_id, outputFilePath, name);
       else {
-        const formData = new FormData();
-        formData.append("file", fs.createReadStream(outputFilePath));
-        formData.append("username", ROOT_USERNAME);
-        formData.append("password", ROOT_PASSWORD);
-        formData.append("name", name);
-
-        // Send file to another server
-        await axios.post(`${API_ROOT}/api/send-file-with-user/${group_chat_id}`, formData, {
-          headers: { ...formData.getHeaders() },
-          maxContentLength: Infinity,
-          maxBodyLength: Infinity, // To handle large files
-          onUploadProgress: (progressEvent) => {
-            const percentCompleted = Math.round((progressEvent.loaded * 100) / (progressEvent.total ?? 0));
-            console.log(`${percentCompleted} %`);
-          },
+        await sendFileToRootServer(group_chat_id, outputFilePath, "user", {
+          additionalData: [{ key: "name", value: name }],
+          onUploadProgress: (percentCompleted) => console.log(`uploaded ${percentCompleted} %`),
         });
       }
 
@@ -166,6 +182,7 @@ const backupDatabase = async ({
     next(index + 1);
   } catch (error) {
     console.error("Error occurred during backup:", error);
+    sendMessage(type, group_chat_id, `Error occurred during backup: ${error}`);
   } finally {
     client.close();
   }
