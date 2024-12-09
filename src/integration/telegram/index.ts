@@ -1,5 +1,5 @@
 import TelegramApi, { Message } from "node-telegram-bot-api";
-import { API_ROOT_SERVER, TELEGRAM_BOT_API, TELEGRAM_BOT_WEBHOOK_PATH } from "../../config";
+import { ROOT_SERVER_API_HTTPS, TELEGRAM_BOT_API, TELEGRAM_BOT_WEBHOOK_PATH } from "../../config";
 import { startCommand, infoCommand } from "./commands";
 
 let bot: TelegramApi | null = null;
@@ -24,7 +24,7 @@ const init = () => {
 
   bot.setMyCommands([{ command: "/start", description: "Start" }]);
 
-  bot.setWebHook(`${API_ROOT_SERVER}/${TELEGRAM_BOT_WEBHOOK_PATH}`);
+  bot.setWebHook(`${ROOT_SERVER_API_HTTPS}/${TELEGRAM_BOT_WEBHOOK_PATH}`);
 
   bot.on("message", messageController);
 

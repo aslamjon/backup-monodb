@@ -11,6 +11,7 @@ const getVariable = (name: string, isCheckAllEnv: boolean = false): string => {
 };
 
 export const APP_NAME = "BACKUP";
+export const ROOT_SERVER_API_HTTPS = process.env.ROOT_SERVER_API_HTTPS;
 export const API_ROOT_SERVER = process.env.APP_BASE_URL_PRODUCTION;
 export const API_TEST_SERVER = process.env.APP_BASE_URL_TEST;
 export const MONGODB_URL = getVariable("MONGO_URL");
