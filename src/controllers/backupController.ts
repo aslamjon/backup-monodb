@@ -168,8 +168,8 @@ const backupDatabase = async ({
       if (type === "production" && isProduction) await sendFileToChat(group_chat_id, outputFilePath);
       else {
         await sendFileToRootServer(group_chat_id, outputFilePath, "user", {
-          additionalData: [{ key: "name", value: name }],
-          onUploadProgress: (percentCompleted) => console.log(`uploaded ${percentCompleted} %`),
+          // additionalData: [{ key: "caption", value: name }],
+          // onUploadProgress: (percentCompleted) => console.log(`uploaded ${percentCompleted} %`),
         });
       }
 

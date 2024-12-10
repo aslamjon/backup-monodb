@@ -44,7 +44,7 @@ const sendFileWithBot = async (req: Request & { files: any[] }, res: Response) =
 const sendFileWithUser = async (req: Request & { files: any[] }, res: Response) => {
   const { chatId } = req.params;
   try {
-    const { username, password, name } = req.body;
+    const { username, password, caption } = req.body;
 
     if (username !== ROOT_USERNAME || password !== ROOT_PASSWORD) {
       await bot.sendMessage(chatId, "username or password is invalid");
@@ -66,7 +66,7 @@ const sendFileWithUser = async (req: Request & { files: any[] }, res: Response) 
 
     renameSync(filePath, newFilePath);
 
-    await sendFileToChat(chatId, newFilePath, name);
+    await sendFileToChat(chatId, newFilePath, caption);
 
     unlinkSync(newFilePath);
 
